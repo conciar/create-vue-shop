@@ -9,10 +9,15 @@
   "files": [
     "index.mjs",
     "template",
+    "!template/node_modules",
+    "!template/dist",
     "README.md"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "keywords": [
