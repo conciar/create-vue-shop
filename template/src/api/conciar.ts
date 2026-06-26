@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import type { SubscriptionBox, Order, CheckoutForm, CartItem } from '@/types'
-import type { ConciarProduct, ConciarPaginated, ConciarResponse, ConciarPaymentMethod, ConciarShippingMethod, ConciarCartShippingMethod, ConciarCartPaymentMethod, ConciarPickupLocation, ConciarDeliveryOption, ConciarDiscount, ConciarCartSyncRequest, ConciarCartData, ConciarCartInitData, ConciarCartGetResponse, OtpIdentifierType, OtpVerifyResponse, ConciarCountry, ConciarStoreConfig, ConciarConnectProduct, ConciarConnectProductsData, ConciarFilter, ConciarProductListParams, ConciarOrderCreateParams, ConciarCreatedOrder, ConciarOrderCreateResponse, ConciarCheckoutCheckResponse, ConciarOrderStatus, ConciarPaymentStatus, ConciarCustomerOrdersData, ConciarCustomerOrderDetail, ConciarCustomerSubscription, ConciarCustomerPaymentMethod, ConciarMandatePaymentMethod, ConciarSwapOptions } from './conciar-types'
+import type { ConciarProduct, ConciarPaginated, ConciarResponse, ConciarPaymentMethod, ConciarShippingMethod, ConciarCartShippingMethod, ConciarCartPaymentMethod, ConciarPickupLocation, ConciarDeliveryOption, ConciarDiscount, ConciarCartSyncRequest, ConciarCartData, ConciarCartInitData, ConciarCartGetResponse, OtpIdentifierType, OtpVerifyResponse, ConciarCountry, ConciarStoreConfig, ConciarConnectProduct, ConciarConnectProductsData, ConciarFilter, ConciarProductListParams, ConciarOrderCreateParams, ConciarOrderAddress, ConciarCreatedOrder, ConciarOrderCreateResponse, ConciarCheckoutCheckResponse, ConciarOrderStatus, ConciarPaymentStatus, ConciarCustomerOrdersData, ConciarCustomerOrderDetail, ConciarCustomerSubscription, ConciarCustomerPaymentMethod, ConciarMandatePaymentMethod, ConciarSwapOptions } from './conciar-types'
 import { mockSubscriptions, mockOrders, mockProducts } from './mock'
 
 const useMock = !import.meta.env.VITE_CONCIAR_API_URL
@@ -112,6 +112,15 @@ function mapProduct(p: ConciarProduct): SubscriptionBox {
     ?? p.converted_retail_price?.amount
     ?? (p.retail_price ? parseFloat(p.retail_price.amount) : 0)
 
+  // compare_price ("was" price), preferring the variant's then the product's,
+  // and the currency-converted figure over the raw one — mirroring `price`.
+  const comparePrice = activeVariant?.converted_compare_price?.amount
+    ?? (activeVariant?.compare_price ? parseFloat(activeVariant.compare_price.amount) : null)
+    ?? p.converted_compare_price?.amount
+    ?? (p.compare_price ? parseFloat(p.compare_price.amount) : null)
+  // Only a genuine discount (compare strictly above the selling price) is shown.
+  const originalPrice = comparePrice != null && comparePrice > price ? comparePrice : undefined
+
   return {
     id: String(p.id),
     variantId: activeVariant ? String(activeVariant.id) : undefined,
@@ -121,6 +130,7 @@ function mapProduct(p: ConciarProduct): SubscriptionBox {
     description: (p.resolved_info ?? p.default_info).description ?? '',
     bottles: bottleMatch ? parseInt(bottleMatch[0]) : 0,
     price,
+    originalPrice,
     frequency: p.subscription_detail
       ? mapBillingCycle(p.subscription_detail.billing_cycle_unit)
       : 'monthly',
@@ -148,6 +158,13 @@ const mockConnectProducts: ConciarConnectProduct[] = mockProducts.map((prod, i) 
     display_price: `€ ${prod.price.toFixed(2).replace('.', ',')}`,
     currency: { symbol: 'EUR', symbol_icon: '€' },
   },
+  converted_compare_price: prod.originalPrice != null
+    ? {
+        amount: prod.originalPrice,
+        display_price: `€ ${prod.originalPrice.toFixed(2).replace('.', ',')}`,
+        currency: { symbol: 'EUR', symbol_icon: '€' },
+      }
+    : null,
   type: { name: 'physical' },
   files: prod.image ? [{ url: prod.image, type: { name: 'image' } }] : [],
   properties: {},
@@ -254,8 +271,10 @@ export const conciarApi = {
           created_at: '',
           updated_at: '',
           retail_price: null,
+          compare_price: null,
           // mock (Connect) price carries a narrower currency shape than the detail type
           converted_retail_price: mock.converted_retail_price as ConciarProduct['converted_retail_price'],
+          converted_compare_price: mock.converted_compare_price as ConciarProduct['converted_compare_price'],
           resolved_info: mock.resolved_info ? { id: mock.id, product_id: mock.id, language_id: 1, name: mock.resolved_info.name, description: mock.resolved_info.description, created_at: '', updated_at: '' } : null,
           default_info: { id: mock.id, product_id: mock.id, language_id: 1, name: mock.resolved_info?.name ?? '', description: mock.resolved_info?.description ?? null, created_at: '', updated_at: '' },
           type: { id: 1, name: 'physical', created_at: '', updated_at: '' },
@@ -574,6 +593,36 @@ export const conciarApi = {
         },
         accessToken,
       )
+    },
+
+    // Shipping methods available for a candidate delivery address (future renewals).
+    async shippingMethods(
+      accessToken: string,
+      id: number,
+      address: { country_code: string; postal_code?: string; province?: string; city?: string; district?: string },
+    ): Promise<ConciarCartShippingMethod[]> {
+      if (useMock) return []
+      const res = await request<{ shipping_methods: ConciarCartShippingMethod[] }>(
+        `/store/customer/subscriptions/${id}/shipping-methods`,
+        { method: 'POST', body: JSON.stringify(address) },
+        accessToken,
+      )
+      return res.shipping_methods ?? []
+    },
+
+    // Update the delivery method + address(es) used for FUTURE renewals (existing orders unchanged).
+    async updateShipping(
+      accessToken: string,
+      id: number,
+      payload: { shipping_method_id: number; shipping_address: ConciarOrderAddress; billing_address?: ConciarOrderAddress | null },
+    ): Promise<ConciarCustomerSubscription> {
+      if (useMock) throw new Error('Not found')
+      const res = await request<{ subscription: ConciarCustomerSubscription }>(
+        `/store/customer/subscriptions/${id}/shipping`,
+        { method: 'POST', body: JSON.stringify(payload) },
+        accessToken,
+      )
+      return res.subscription
     },
   },
 

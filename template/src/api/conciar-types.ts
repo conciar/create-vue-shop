@@ -52,6 +52,11 @@ export interface ConciarVariant {
   default_info: ConciarProductInfo | null
   converted_retail_price: ConciarConvertedPrice | null
   retail_price: ConciarRetailPrice | null
+  // Merchant's reference/original price for the strike-through + "save X%" UI.
+  // Optional — absent/null when there's no "was" price. Display reference only:
+  // never charged, never added to any total.
+  compare_price?: ConciarRetailPrice | null
+  converted_compare_price?: ConciarConvertedPrice | null
   tax?: ConciarTax | null
 }
 
@@ -153,6 +158,11 @@ export interface ConciarProduct {
   variants: ConciarVariant[]
   property_values?: ConciarPropertyValue[]
   files?: Array<{ url: string; type: { name: string } }>
+  // Merchant's reference/original price for the strike-through + "save X%" UI.
+  // Optional — absent/null when there's no "was" price. Display reference only:
+  // never charged, never added to any total. Variants carry their own (above).
+  compare_price?: ConciarRetailPrice | null
+  converted_compare_price?: ConciarConvertedPrice | null
   tax?: ConciarTax | null
   price_rules?: ConciarPriceRule[]
 }
@@ -609,6 +619,10 @@ export interface ConciarCustomerSubscription {
   cycles_count: number
   commitment_cycles_remaining: number | null
   customer_payment_method?: ConciarCustomerPaymentMethod | null
+  // Delivery used for future renewals (editable from the account area).
+  shipping_method?: { id: number; name: string } | null
+  shipping_address?: ConciarCustomerOrderAddress | null
+  billing_address?: ConciarCustomerOrderAddress | null
   product: {
     id: number
     defaultInfo?: { name: string; description: string | null }
@@ -646,6 +660,31 @@ export interface ConciarCustomerOrderTransaction {
   paid_at: string | null
 }
 
+// A credit note is an invoice raised by a refund. Its line prices carry a `type` (loaded
+// server-side) so the line total ('total_price') can be told apart from the unit price.
+export interface ConciarCustomerCreditNotePrice {
+  id: number
+  amount: string
+  display_price: string
+  type: { name: string } | null
+  currency: { symbol_icon: string; symbol: string }
+}
+
+export interface ConciarCustomerCreditNoteLine {
+  id: number
+  name: string
+  description: string | null
+  quantity: number
+  prices: ConciarCustomerCreditNotePrice[]
+}
+
+export interface ConciarCustomerCreditNote {
+  id: number
+  reference: string
+  created_at: string
+  lines: ConciarCustomerCreditNoteLine[]
+}
+
 export interface ConciarCustomerOrderDetail extends ConciarCustomerOrder {
   address: ConciarCustomerOrderAddress | null
   billing_address: ConciarCustomerOrderAddress | null
@@ -653,6 +692,8 @@ export interface ConciarCustomerOrderDetail extends ConciarCustomerOrder {
     reference: string
     transactions: ConciarCustomerOrderTransaction[]
   } | null
+  // Credit notes raised against this order by refunds (one per refund). Empty if none.
+  credit_notes: ConciarCustomerCreditNote[]
 }
 
 export interface ConciarOrderStatus {
@@ -711,6 +752,14 @@ export interface ConciarConnectProduct {
   is_one_time_purchase?: boolean
   resolved_info: { name: string; description: string | null } | null
   converted_retail_price: {
+    amount: number
+    display_price: string
+    currency: { symbol: string; symbol_icon: string }
+  } | null
+  // Reference/original price for the strike-through + "save X%" UI (already in
+  // the customer's currency, mirroring converted_retail_price). Optional —
+  // absent/null when there's no "was" price. Display reference only.
+  converted_compare_price?: {
     amount: number
     display_price: string
     currency: { symbol: string; symbol_icon: string }

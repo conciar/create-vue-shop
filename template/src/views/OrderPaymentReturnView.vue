@@ -8,7 +8,7 @@ const { t } = useI18n()
 const router         = useRouter()
 const transactionKey = sessionStorage.getItem('pending_transaction_key')
 
-type State = 'loading' | 'paid' | 'failed' | 'timeout' | 'not_found'
+type State = 'loading' | 'paid' | 'authorized' | 'failed' | 'timeout' | 'not_found'
 
 const state          = ref<State>('loading')
 const orderReference = ref<string | null>(null)
@@ -22,13 +22,16 @@ async function pollStatus() {
   try {
     const result = await conciarApi.orders.getStatusByTransaction(transactionKey!)
 
-    const isPaid   = result.is_paid   || result.status === 'paid'
-    const isFailed = result.is_failed || result.status === 'failed' || result.status === 'cancelled'
+    const isPaid       = result.is_paid   || result.status === 'paid'
+    const isFailed     = result.is_failed || result.status === 'failed' || result.status === 'cancelled'
+    // Capture-on-shipment: the order is placed and the amount is held (authorized), not charged.
+    // This is a terminal SUCCESS — don't keep polling for a "paid" that won't arrive until shipment.
+    const isAuthorized = result.status === 'authorized'
 
-    if (isPaid) {
+    if (isPaid || isAuthorized) {
       orderReference.value = result.order_reference
       amount.value         = parseFloat(String(result.amount))
-      state.value          = 'paid'
+      state.value          = isAuthorized ? 'authorized' : 'paid'
       sessionStorage.removeItem('pending_transaction_key')
       setTimeout(() => router.push({ name: 'order-confirmation', params: { reference: result.order_reference } }), 2500)
       return
@@ -67,12 +70,12 @@ onUnmounted(() => { if (pollTimer) clearTimeout(pollTimer) })
       <!-- Icon -->
       <div :class="[
         'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-all',
-        state === 'paid'    ? 'bg-green-100' :
+        state === 'paid' || state === 'authorized' ? 'bg-green-100' :
         state === 'failed'  ? 'bg-red-50' :
         state === 'timeout' ? 'bg-amber-50' :
         'bg-white border border-black/8',
       ]">
-        <svg v-if="state === 'paid'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-green-600">
+        <svg v-if="state === 'paid' || state === 'authorized'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-green-600">
           <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd"/>
         </svg>
         <svg v-else-if="state === 'failed'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-red-400">
@@ -93,6 +96,21 @@ onUnmounted(() => { if (pollTimer) clearTimeout(pollTimer) })
         <p v-if="orderReference" class="font-mono text-sm text-gray-400 mb-1">{{ orderReference }}</p>
         <p v-if="amount" class="font-mono text-base font-semibold text-primary mb-4">€ {{ amount.toFixed(2).replace('.', ',') }}</p>
         <p class="text-sm text-gray-500 mb-8">{{ t('paymentReturn.confirmedEmail') }}</p>
+        <RouterLink
+          v-if="orderReference"
+          :to="{ name: 'order-confirmation', params: { reference: orderReference } }"
+          class="inline-block bg-charcoal text-white font-mono font-medium px-6 py-3.5 rounded-xl hover:bg-primary transition-colors text-sm"
+        >
+          {{ t('paymentReturn.viewOrder') }}
+        </RouterLink>
+      </template>
+
+      <!-- Authorized — placed & funds held, charged on shipment (capture-on-shipment) -->
+      <template v-else-if="state === 'authorized'">
+        <h1 class="font-display text-3xl font-semibold mb-2">{{ t('paymentReturn.authorizedTitle') }}</h1>
+        <p v-if="orderReference" class="font-mono text-sm text-gray-400 mb-1">{{ orderReference }}</p>
+        <p v-if="amount" class="font-mono text-base font-semibold text-primary mb-4">€ {{ amount.toFixed(2).replace('.', ',') }}</p>
+        <p class="text-sm text-gray-500 mb-8">{{ t('paymentReturn.authorizedDesc') }}</p>
         <RouterLink
           v-if="orderReference"
           :to="{ name: 'order-confirmation', params: { reference: orderReference } }"

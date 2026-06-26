@@ -2,9 +2,10 @@ import type { Product, SubscriptionBox, Order } from '@/types'
 
 export const mockProducts: Product[] = [
   { id: 'p1', name: 'Sample product 1', price: 29, image: '' },
-  { id: 'p2', name: 'Sample product 2', price: 49, image: '' },
+  // originalPrice → a compare_price ("was") so the discount UI shows in mock mode
+  { id: 'p2', name: 'Sample product 2', price: 49, originalPrice: 65, image: '' },
   { id: 'p3', name: 'Sample product 3', price: 79, image: '' },
-  { id: 'p4', name: 'Sample product 4', price: 119, image: '' },
+  { id: 'p4', name: 'Sample product 4', price: 119, originalPrice: 149, image: '' },
 ]
 
 export const mockSubscriptions: SubscriptionBox[] = [

@@ -4,14 +4,16 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCustomerStore } from '@/stores/customer'
 import { useStoreConfigStore } from '@/stores/storeConfig'
+import { useCountriesStore, formatCountryName } from '@/stores/countries'
 import { conciarApi } from '@/api/conciar'
 import { useModalA11y } from '@/composables/useModalA11y'
-import type { ConciarCustomerSubscription, ConciarMandatePaymentMethod, ConciarSwapVariant, ConciarSwapProduct } from '@/api/conciar-types'
+import type { ConciarCustomerSubscription, ConciarMandatePaymentMethod, ConciarSwapVariant, ConciarSwapProduct, ConciarCartShippingMethod, ConciarOrderAddress } from '@/api/conciar-types'
 
 const route       = useRoute()
 const router      = useRouter()
 const customer    = useCustomerStore()
 const storeConfig = useStoreConfigStore()
+const countries   = useCountriesStore()
 const { t, locale } = useI18n()
 
 const sub     = ref<ConciarCustomerSubscription | null>(null)
@@ -24,7 +26,7 @@ const skipCount   = ref(1)
 const actionBusy  = ref(false)
 const actionError = ref<string | null>(null)
 
-type ModalKind = 'pause' | 'cancel' | 'update_payment' | 'swap' | null
+type ModalKind = 'pause' | 'cancel' | 'update_payment' | 'swap' | 'shipping' | null
 const modal              = ref<ModalKind>(null)
 const cancelReason       = ref('')
 const updatePaymentBusy  = ref(false)
@@ -218,6 +220,94 @@ async function doSwap() {
     else swapError.value = e?.body?.message ?? t('sub.modal.error')
   } finally {
     swapBusy.value = false
+  }
+}
+
+// ─── Renewal delivery (shipping address + method for FUTURE renewals) ───────────
+interface ShipForm {
+  street: string; house_number: string; apartment: string
+  zipcode: string; city: string; state: string; district: string
+  country_id: number | null
+}
+const shipForm           = ref<ShipForm>({ street: '', house_number: '', apartment: '', zipcode: '', city: '', state: '', district: '', country_id: null })
+const shipMethods        = ref<ConciarCartShippingMethod[]>([])
+const shipMethodsLoading = ref(false)
+const shipMethodsError   = ref<string | null>(null)
+const selectedShipMethod = ref<ConciarCartShippingMethod | null>(null)
+const shipBusy           = ref(false)
+const shipError          = ref<string | null>(null)
+const shipJustSucceeded  = ref(false)
+
+const selectedShipCountry = computed(() => countries.countries.find(c => c.id === shipForm.value.country_id) ?? null)
+
+async function openShippingModal() {
+  modal.value             = 'shipping'
+  shipError.value         = null
+  shipMethodsError.value  = null
+  shipMethods.value       = []
+  selectedShipMethod.value = null
+  await countries.fetch()
+  const a = sub.value?.shipping_address ?? null
+  const matchId = a?.country ? (countries.countries.find(c => c.iso_code_2 === a.country!.iso_code_2)?.id ?? null) : null
+  shipForm.value = {
+    street: a?.street ?? '', house_number: a?.house_number ?? '', apartment: a?.apartment ?? '',
+    zipcode: a?.zipcode ?? '', city: a?.city ?? '', state: a?.state ?? '', district: '',
+    country_id: matchId,
+  }
+}
+
+async function findShippingMethods() {
+  const country = selectedShipCountry.value
+  if (!country || !shipForm.value.city) return
+  shipMethodsLoading.value = true
+  shipMethodsError.value   = null
+  shipMethods.value        = []
+  selectedShipMethod.value = null
+  try {
+    shipMethods.value = await conciarApi.customerSubscriptions.shippingMethods(customer.accessToken!, id, {
+      country_code: country.iso_code_2,
+      postal_code:  shipForm.value.zipcode || undefined,
+      province:     shipForm.value.state || undefined,
+      city:         shipForm.value.city || undefined,
+      district:     shipForm.value.district || undefined,
+    })
+    if (shipMethods.value.length === 1) selectedShipMethod.value = shipMethods.value[0]
+  } catch (e: any) {
+    if (e?.status === 401) { customer.logout(); router.push('/login') }
+    else shipMethodsError.value = t('sub.modal.shipping.loadError')
+  } finally {
+    shipMethodsLoading.value = false
+  }
+}
+
+async function doUpdateShipping() {
+  if (!selectedShipMethod.value || !shipForm.value.country_id) return
+  shipBusy.value  = true
+  shipError.value = null
+  try {
+    const address: ConciarOrderAddress = {
+      street:       shipForm.value.street || undefined,
+      house_number: shipForm.value.house_number || undefined,
+      apartment:    shipForm.value.apartment || null,
+      city:         shipForm.value.city,
+      zipcode:      shipForm.value.zipcode || undefined,
+      district:     shipForm.value.district || null,
+      state:        shipForm.value.state || undefined,
+      country_id:   shipForm.value.country_id,
+    }
+    const updated = await conciarApi.customerSubscriptions.updateShipping(customer.accessToken!, id, {
+      shipping_method_id: selectedShipMethod.value.id,
+      shipping_address:   address,
+    })
+    modal.value = null
+    sub.value   = updated
+    shipJustSucceeded.value = true
+    setTimeout(() => { shipJustSucceeded.value = false }, 5000)
+  } catch (e: any) {
+    if (e?.status === 401) { customer.logout(); router.push('/login') }
+    else shipError.value = e?.body?.message ?? t('sub.modal.error')
+  } finally {
+    shipBusy.value = false
   }
 }
 
@@ -435,6 +525,18 @@ const commitmentProgress = computed(() => {
               <span class="font-semibold">{{ t('sub.banner.swapSuccess') }}</span>
               {{ t('sub.banner.swapSuccessDesc') }}
             </p>
+          </div>
+        </Transition>
+
+        <!-- Delivery updated banner -->
+        <Transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2"
+                    enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200"
+                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+          <div v-if="shipJustSucceeded" class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 shrink-0 text-green-500">
+              <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm3.844-8.791a.75.75 0 0 0-1.188-.918l-3.7 4.79-1.649-1.833a.75.75 0 1 0-1.114 1.004l2.25 2.5a.75.75 0 0 0 1.15-.043l4.25-5.5Z" clip-rule="evenodd"/>
+            </svg>
+            <p class="font-mono text-sm text-green-700">{{ t('sub.banner.shippingSuccess') }}</p>
           </div>
         </Transition>
 
@@ -693,6 +795,25 @@ const commitmentProgress = computed(() => {
               </button>
             </div>
           </template>
+
+          <!-- Renewal delivery -->
+          <div class="pt-4 border-t border-black/6">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-mono text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em] mb-1">{{ t('sub.delivery.title') }}</p>
+                <template v-if="sub.shipping_address">
+                  <p class="text-sm text-charcoal truncate">
+                    {{ [sub.shipping_address.street, sub.shipping_address.house_number].filter(Boolean).join(' ') }}<span v-if="sub.shipping_address.city">, {{ sub.shipping_address.zipcode }} {{ sub.shipping_address.city }}</span>
+                  </p>
+                  <p v-if="sub.shipping_method" class="font-mono text-xs text-gray-400 mt-0.5">{{ sub.shipping_method.name }}</p>
+                </template>
+                <p v-else class="text-sm text-gray-400">{{ t('sub.delivery.none') }}</p>
+              </div>
+              <button type="button" @click="openShippingModal" class="shrink-0 font-mono text-xs text-primary hover:underline">
+                {{ t('sub.delivery.change') }}
+              </button>
+            </div>
+          </div>
 
           <!-- Secondary actions -->
           <div class="flex items-center gap-2 pt-4 border-t border-black/6">
@@ -1149,6 +1270,83 @@ const commitmentProgress = computed(() => {
                 <button type="button" :disabled="actionBusy" @click="closeModal"
                   class="w-full font-mono text-sm text-gray-400 hover:text-charcoal transition-colors py-2.5 rounded-xl hover:bg-black/4">
                   {{ t('sub.modal.cancel.back') }}
+                </button>
+              </div>
+            </template>
+
+            <!-- Change renewal delivery -->
+            <template v-else-if="modal === 'shipping'">
+              <div class="w-10 h-10 rounded-full bg-charcoal/8 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-5 h-5 text-charcoal">
+                  <path d="M1 3.75A.75.75 0 0 1 1.75 3h8.5a.75.75 0 0 1 .75.75V5h1.92c.62 0 1.2.33 1.52.87l1.07 1.83c.16.27.24.58.24.9v2.65A1.75 1.75 0 0 1 15 12.75h-.6a2 2 0 0 1-3.92 0H6.52a2 2 0 0 1-3.92 0H1.75A.75.75 0 0 1 1 12V3.75Z"/>
+                </svg>
+              </div>
+              <h2 class="font-display text-xl font-semibold mb-1">{{ t('sub.modal.shipping.title') }}</h2>
+              <p class="text-sm text-gray-500 leading-relaxed mb-5">{{ t('sub.modal.shipping.desc') }}</p>
+
+              <div class="flex flex-col gap-2.5 mb-4">
+                <select v-model.number="shipForm.country_id" @change="shipMethods = []; selectedShipMethod = null"
+                  class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30">
+                  <option :value="null" disabled>{{ t('sub.modal.shipping.country') }}</option>
+                  <option v-for="c in countries.countries" :key="c.id" :value="c.id">{{ formatCountryName(c.name) }}</option>
+                </select>
+                <div class="grid grid-cols-[1fr_5rem] gap-2.5">
+                  <input v-model="shipForm.street" type="text" :placeholder="t('sub.modal.shipping.street')"
+                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                  <input v-model="shipForm.house_number" type="text" :placeholder="t('sub.modal.shipping.houseNumber')"
+                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                </div>
+                <input v-model="shipForm.apartment" type="text" :placeholder="t('sub.modal.shipping.apartment')"
+                  class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                <div class="grid grid-cols-[7rem_1fr] gap-2.5">
+                  <input v-model="shipForm.zipcode" type="text" :placeholder="t('sub.modal.shipping.zipcode')"
+                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                  <input v-model="shipForm.city" type="text" :placeholder="t('sub.modal.shipping.city')"
+                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                </div>
+                <input v-model="shipForm.state" type="text" :placeholder="t('sub.modal.shipping.state')"
+                  class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+              </div>
+
+              <button type="button" :disabled="!shipForm.country_id || !shipForm.city || shipMethodsLoading" @click="findShippingMethods"
+                class="w-full border border-black/12 font-mono text-sm py-2.5 rounded-xl hover:bg-black/4 transition-colors disabled:opacity-40 mb-3 flex items-center justify-center gap-2">
+                <svg v-if="shipMethodsLoading" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                {{ t('sub.modal.shipping.findOptions') }}
+              </button>
+
+              <p v-if="shipMethodsError" class="font-mono text-xs text-red-500 mb-3">{{ shipMethodsError }}</p>
+
+              <div v-if="shipMethods.length" class="flex flex-col gap-2 mb-4 max-h-52 overflow-y-auto -mx-1 px-1">
+                <button v-for="m in shipMethods" :key="m.id" type="button" @click="selectedShipMethod = m"
+                  :class="[
+                    'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all text-left',
+                    selectedShipMethod?.id === m.id ? 'border-charcoal bg-black/4' : 'border-black/10 hover:border-black/25',
+                  ]">
+                  <div :class="['w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center', selectedShipMethod?.id === m.id ? 'border-charcoal' : 'border-gray-300']">
+                    <div v-if="selectedShipMethod?.id === m.id" class="w-2 h-2 rounded-full bg-charcoal" />
+                  </div>
+                  <p class="flex-1 font-mono text-sm font-semibold text-charcoal truncate">{{ m.resolved_info.name }}</p>
+                  <span class="shrink-0 font-mono text-sm text-charcoal">{{ m.is_free ? t('sub.modal.shipping.free') : (m.rate?.display_price ?? '') }}</span>
+                </button>
+              </div>
+
+              <p v-if="shipError" class="font-mono text-xs text-red-500 mb-3">{{ shipError }}</p>
+
+              <div class="flex flex-col gap-2">
+                <button type="button" :disabled="!selectedShipMethod || shipBusy" @click="doUpdateShipping"
+                  class="w-full bg-charcoal text-white font-mono font-medium text-sm py-3 rounded-xl hover:bg-primary transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  <svg v-if="shipBusy" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  {{ t('sub.modal.shipping.save') }}
+                </button>
+                <button type="button" :disabled="shipBusy" @click="closeModal"
+                  class="w-full font-mono text-sm text-gray-400 hover:text-charcoal transition-colors py-2.5 rounded-xl hover:bg-black/4">
+                  {{ t('sub.modal.shipping.back') }}
                 </button>
               </div>
             </template>

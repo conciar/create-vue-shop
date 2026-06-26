@@ -5,8 +5,8 @@ import { useCartStore } from '@/stores/cart'
 import { useCompareStore } from '@/stores/compare'
 import PromoBadge from '@/components/promo/PromoBadge.vue'
 import { conciarApi } from '@/api/conciar'
-import { formatMoney } from '@/utils/money'
-import type { ConciarProduct } from '@/api/conciar-types'
+import { formatMoney, discountDisplay } from '@/utils/money'
+import type { ConciarProduct, ConciarVariant } from '@/api/conciar-types'
 import type { Product } from '@/types'
 
 const route   = useRoute()
@@ -19,6 +19,9 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     product.value = await conciarApi.products.getDetail(route.params.id as string)
+    // Default to the first in-stock variant (or the first) so the CTA has a concrete selection.
+    const active = (product.value?.variants ?? []).filter(v => v.active)
+    if (active.length) selectedVariantId.value = (active.find(v => !v.out_of_stock) ?? active[0]).id
   } finally {
     loading.value = false
   }
@@ -26,9 +29,28 @@ onMounted(async () => {
 
 const name        = computed(() => product.value ? (product.value.resolved_info ?? product.value.default_info).name : '')
 const description = computed(() => product.value ? (product.value.resolved_info ?? product.value.default_info).description : null)
-const displayPrice = computed(() => product.value?.converted_retail_price?.display_price ?? null)
+// ── Variants ──────────────────────────────────────────────────────────────────
+const selectedVariantId = ref<number | null>(null)
+const variants       = computed(() => (product.value?.variants ?? []).filter(v => v.active))
+const hasVariants    = computed(() => variants.value.length > 0)
+const selectedVariant = computed(() => variants.value.find(v => v.id === selectedVariantId.value) ?? null)
+const variantLabel = (v: ConciarVariant) => v.resolved_info?.name ?? v.default_info?.name ?? v.sku ?? `#${v.id}`
+
+// Price / stock follow the selected variant when the product has variants, else the product itself.
+const effConvertedPrice   = computed(() => selectedVariant.value?.converted_retail_price ?? product.value?.converted_retail_price ?? null)
+const effConvertedCompare = computed(() => selectedVariant.value?.converted_compare_price ?? product.value?.converted_compare_price ?? null)
+const effOutOfStock       = computed(() => (selectedVariant.value ?? product.value)?.out_of_stock ?? false)
+
+const displayPrice = computed(() => effConvertedPrice.value?.display_price ?? null)
+// Strike-through "was" price + saving, shown only when a compare_price exists
+// and is genuinely higher than the selling price.
+const discount = computed(() => {
+  const selling = effConvertedPrice.value?.amount
+  if (selling == null) return null
+  return discountDisplay(selling, effConvertedCompare.value)
+})
 // Tax decomposed out of the gross (displayed) price; null = no tax rule.
-const tax = computed(() => product.value?.tax ?? null)
+const tax = computed(() => selectedVariant.value?.tax ?? product.value?.tax ?? null)
 const image       = computed(() => product.value?.files?.find(f => f.type?.name === 'image')?.url ?? null)
 
 // Properties hidden from the generic spec list
@@ -97,12 +119,14 @@ function toggleCompare() {
 
 function buildCartProduct(): Product {
   const p = product.value!
+  const v = selectedVariant.value
   return {
     id: String(p.id),
-    name: name.value,
-    price: p.converted_retail_price?.amount ?? 0,
+    name: v ? `${name.value} · ${variantLabel(v)}` : name.value,
+    price: (v?.converted_retail_price ?? p.converted_retail_price)?.amount ?? 0,
     image: image.value ?? '',
     priceRules: p.price_rules,
+    variantId: v ? String(v.id) : undefined,
   }
 }
 
@@ -163,7 +187,7 @@ function addOneTime() {
             <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.75" class="w-32 h-32 text-gray-200">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 3h6M9 3v3.5c0 .5-.2 1-.5 1.4L6 11v9a1 1 0 001 1h10a1 1 0 001-1v-9l-2.5-3.1c-.3-.4-.5-.9-.5-1.4V3M9 3h6" />
             </svg>
-            <div v-if="product.out_of_stock" class="absolute inset-0 bg-white/70 flex items-center justify-center">
+            <div v-if="effOutOfStock" class="absolute inset-0 bg-white/70 flex items-center justify-center">
               <span class="font-mono text-sm font-semibold text-gray-500 border border-black/10 bg-white px-4 py-2 rounded-full">Out of stock</span>
             </div>
           </div>
@@ -172,7 +196,11 @@ function addOneTime() {
           <div class="hidden lg:block bg-white rounded-2xl p-5 shadow-sm border border-black/6 space-y-3">
             <div class="flex items-end justify-between mb-4">
               <div>
-                <p class="font-mono text-3xl font-semibold">{{ displayPrice ?? '–' }}</p>
+                <div class="flex items-baseline gap-2 flex-wrap">
+                  <p class="font-mono text-3xl font-semibold">{{ displayPrice ?? '–' }}</p>
+                  <span v-if="discount" class="font-mono text-base text-gray-400 line-through">{{ discount.was }}</span>
+                  <span v-if="discount" class="font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-charcoal text-white">−{{ discount.percentOff }}%</span>
+                </div>
                 <p v-if="intervalLabel" class="font-mono text-xs text-gray-400 mt-0.5">
                   {{ intervalLabel }}
                 </p>
@@ -197,15 +225,15 @@ function addOneTime() {
             </div>
 
             <button
-              :disabled="product.out_of_stock"
+              :disabled="effOutOfStock"
               @click="addToCart"
               class="w-full bg-charcoal text-white font-mono font-medium py-3.5 rounded-xl hover:bg-primary transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {{ product.out_of_stock ? 'Out of stock' : product.is_subscription ? 'Subscribe' : 'Add to cart' }}
+              {{ effOutOfStock ? 'Out of stock' : product.is_subscription ? 'Subscribe' : 'Add to cart' }}
             </button>
             <!-- One-time purchase option for subscriptions -->
             <button
-              v-if="product.is_subscription && product.subscription_detail?.allow_one_time_purchase && !product.out_of_stock"
+              v-if="product.is_subscription && product.subscription_detail?.allow_one_time_purchase && !effOutOfStock"
               @click="addOneTime"
               class="w-full border border-black/15 text-charcoal font-mono font-medium py-3 rounded-xl hover:border-black/40 transition-colors text-sm"
             >
@@ -255,6 +283,30 @@ function addOneTime() {
           <p v-if="description" class="text-gray-600 leading-relaxed text-base border-t border-black/6 pt-6">
             {{ description }}
           </p>
+
+          <!-- Variant selector -->
+          <div v-if="hasVariants" class="border-t border-black/6 pt-6">
+            <p class="font-mono text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em] mb-3">Options</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="v in variants"
+                :key="v.id"
+                type="button"
+                :disabled="v.out_of_stock"
+                @click="selectedVariantId = v.id"
+                :class="[
+                  'px-4 py-2.5 rounded-xl border text-sm font-mono transition-all',
+                  selectedVariantId === v.id
+                    ? 'border-primary bg-primary/8 text-primary'
+                    : 'border-black/10 text-charcoal hover:border-black/30',
+                  v.out_of_stock ? 'opacity-40 line-through cursor-not-allowed hover:border-black/10' : '',
+                ]"
+              >
+                {{ variantLabel(v) }}
+                <span v-if="v.converted_retail_price" class="text-gray-400"> · {{ v.converted_retail_price.display_price }}</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Subscription details block -->
           <div v-if="product.is_subscription && product.subscription_detail" class="bg-primary/5 border border-primary/15 rounded-2xl p-5">
@@ -320,8 +372,12 @@ function addOneTime() {
     <!-- ── Mobile sticky CTA ──────────────────────────────────────────────── -->
     <div v-if="product && !loading" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-black/8 px-6 py-4 flex items-center gap-3 z-30">
       <div class="shrink-0">
-        <p class="font-mono text-lg font-semibold">{{ displayPrice ?? '–' }}</p>
-        <p v-if="product.sku" class="font-mono text-xs text-gray-400">{{ product.sku }}</p>
+        <p class="font-mono text-lg font-semibold flex items-baseline gap-1.5">
+          <span>{{ displayPrice ?? '–' }}</span>
+          <span v-if="discount" class="text-xs font-normal text-gray-400 line-through">{{ discount.was }}</span>
+        </p>
+        <p v-if="discount" class="font-mono text-[10px] font-semibold text-primary">−{{ discount.percentOff }}% off</p>
+        <p v-else-if="product.sku" class="font-mono text-xs text-gray-400">{{ product.sku }}</p>
       </div>
       <button
         v-if="hasProperties"
@@ -340,14 +396,14 @@ function addOneTime() {
         Compare
       </button>
       <button
-        :disabled="product.out_of_stock"
+        :disabled="effOutOfStock"
         @click="addToCart"
         class="flex-1 bg-charcoal text-white font-mono font-medium py-3 rounded-xl hover:bg-primary transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {{ product.out_of_stock ? 'Out of stock' : product.is_subscription ? 'Subscribe' : 'Add to cart' }}
+        {{ effOutOfStock ? 'Out of stock' : product.is_subscription ? 'Subscribe' : 'Add to cart' }}
       </button>
       <button
-        v-if="product.is_subscription && product.subscription_detail?.allow_one_time_purchase && !product.out_of_stock"
+        v-if="product.is_subscription && product.subscription_detail?.allow_one_time_purchase && !effOutOfStock"
         @click="addOneTime"
         class="shrink-0 border border-black/15 font-mono font-medium py-3 px-4 rounded-xl hover:border-black/40 transition-colors text-xs"
       >

@@ -3,7 +3,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useCustomerStore } from '@/stores/customer'
 import { conciarApi } from '@/api/conciar'
-import type { ConciarCustomerOrderDetail } from '@/api/conciar-types'
+import type {
+  ConciarCustomerOrderDetail,
+  ConciarCustomerCreditNote,
+  ConciarCustomerCreditNoteLine,
+} from '@/api/conciar-types'
 
 const route    = useRoute()
 const router   = useRouter()
@@ -34,6 +38,23 @@ const subtotalDisplay = computed(() => order.value?.prices[0]?.display_price ?? 
 const totalDisplay    = computed(() => order.value?.prices.at(-1)?.display_price ?? null)
 
 const transaction = computed(() => order.value?.invoice?.transactions?.[0] ?? null)
+
+// Credit notes (refunds). Each line carries unit_price + total_price rows; the line total
+// is 'total_price' (unit × qty), falling back to unit_price for safety.
+const creditNotes = computed(() => order.value?.credit_notes ?? [])
+
+function creditLineTotal(line: ConciarCustomerCreditNoteLine) {
+  return line.prices.find(p => p.type?.name === 'total_price')
+      ?? line.prices.find(p => p.type?.name === 'unit_price')
+      ?? line.prices[0] ?? null
+}
+
+// Refunded total for a credit note = sum of its line totals, formatted like the payment
+// amount above (the storefront is EUR-only).
+function creditNoteTotal(cn: ConciarCustomerCreditNote): string {
+  const sum = cn.lines.reduce((acc, l) => acc + (parseFloat(creditLineTotal(l)?.amount ?? '0') || 0), 0)
+  return '€ ' + sum.toFixed(2).replace('.', ',')
+}
 
 function formatCountryName(name: string) {
   return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -196,6 +217,31 @@ function formatDate(iso: string) {
             </p>
           </div>
 
+        </div>
+
+        <!-- Refunds / credit notes -->
+        <div v-if="creditNotes.length" class="border-t border-black/8 px-6 py-5">
+          <p class="font-mono text-xs text-gray-400 uppercase tracking-wider mb-4">Terugbetalingen</p>
+
+          <div v-for="cn in creditNotes" :key="cn.id" class="mb-5 last:mb-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="font-mono text-[11px] font-semibold px-2.5 py-1 rounded-full border border-green-600/30 text-green-700 bg-green-600/10 shrink-0">
+                  Terugbetaald
+                </span>
+                <span class="font-mono text-xs text-gray-400 truncate">{{ cn.reference }}</span>
+              </div>
+              <span class="font-mono text-sm font-semibold text-green-700 shrink-0">{{ creditNoteTotal(cn) }}</span>
+            </div>
+            <p class="font-mono text-[11px] text-gray-400 mb-2">{{ formatDate(cn.created_at) }}</p>
+
+            <div class="space-y-1">
+              <div v-for="l in cn.lines" :key="l.id" class="flex justify-between gap-2 text-xs text-gray-500">
+                <span class="truncate">{{ l.name }} <span class="text-gray-400">× {{ l.quantity }}</span></span>
+                <span class="font-mono shrink-0">{{ creditLineTotal(l)?.display_price ?? '–' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

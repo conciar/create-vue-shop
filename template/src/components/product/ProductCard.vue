@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useCompareStore } from '@/stores/compare'
 import PromoBadge from '@/components/promo/PromoBadge.vue'
-import { formatMoney } from '@/utils/money'
+import { formatMoney, discountDisplay } from '@/utils/money'
 import type { ConciarConnectProduct } from '@/api/conciar-types'
 import type { Product, SubscriptionBox } from '@/types'
 
@@ -30,6 +30,14 @@ function toggleCompare(e: Event) {
 const image = computed(() => props.product.files?.find(f => f.type?.name === 'image')?.url ?? null)
 const name  = computed(() => props.product.resolved_info?.name ?? `Product ${props.product.id}`)
 const price = computed(() => props.product.converted_retail_price?.display_price ?? null)
+
+// Strike-through "was" price + saving, shown only when a compare_price exists
+// and is genuinely higher than the selling price.
+const discount = computed(() => {
+  const selling = props.product.converted_retail_price?.amount
+  if (selling == null) return null
+  return discountDisplay(selling, props.product.converted_compare_price)
+})
 
 // Gross is the headline price; show a small note decomposing the tax out of it.
 // Labels come from the merchant's rule (BTW, Accijns, …) — never hardcoded.
@@ -121,6 +129,14 @@ function addToCart(e: Event) {
       <!-- Promo badge (automatic promotions, advertised from price_rules) -->
       <PromoBadge :rules="product.price_rules" :max="1" class="absolute top-2 left-2 z-10 pointer-events-none" />
 
+      <!-- Discount badge (static compare_price "was" price, not a promotion) -->
+      <span
+        v-if="discount"
+        class="absolute top-2 right-2 z-10 pointer-events-none font-mono text-xs font-semibold px-2 py-1 rounded-full bg-charcoal text-white"
+      >
+        −{{ discount.percentOff }}%
+      </span>
+
       <!-- Out of stock badge -->
       <div v-if="product.out_of_stock" class="absolute inset-0 bg-white/60 flex items-center justify-center">
         <span class="font-mono text-xs font-semibold text-gray-500 bg-white border border-black/10 rounded-full px-3 py-1">
@@ -160,7 +176,10 @@ function addToCart(e: Event) {
 
       <div class="mt-auto pt-3 flex items-center justify-between gap-2">
         <div class="min-w-0">
-          <p v-if="price" class="font-mono text-sm font-semibold">{{ price }}</p>
+          <p v-if="price" class="font-mono text-sm font-semibold flex items-baseline gap-1.5 flex-wrap">
+            <span>{{ price }}</span>
+            <span v-if="discount" class="text-xs font-normal text-gray-400 line-through">{{ discount.was }}</span>
+          </p>
           <p v-if="taxNote" class="font-mono text-[10px] text-gray-400 leading-tight truncate">{{ taxNote }}</p>
         </div>
         <button
