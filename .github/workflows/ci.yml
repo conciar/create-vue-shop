@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ── The generated app: lint, type-check, unit tests, production build ──
+  template:
+    name: Template (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # Tailwind v4 requires Node 20+, so we don't test 18 despite engines: >=18.
+      matrix:
+        node: [20, 22]
+    defaults:
+      run:
+        working-directory: template
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: template/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npx eslint .
+      - name: Unit tests
+        run: npx vitest run
+      - name: Type-check & build
+        run: npm run build
+
+  # ── The scaffolder: create → install → build the generated project end-to-end ──
+  scaffold:
+    name: Scaffolder smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Scaffold a project
+        run: node index.mjs ci-shop --yes --name "CI Shop" --api-url https://api.conciar.com --api-key test-key --channel test-channel
+      - name: Install & build the generated project
+        run: npm install && npm run build
+        working-directory: ci-shop
