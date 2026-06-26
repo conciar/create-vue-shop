@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import type { SubscriptionBox } from '@/types'
 
-const props = defineProps<{ box: SubscriptionBox }>()
+defineProps<{ box: SubscriptionBox }>()
 const cart = useCartStore()
 </script>
 

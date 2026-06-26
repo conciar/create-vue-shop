@@ -13,5 +13,18 @@ export default defineConfigWithVueTs(
   },
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
-  skipFormatting
+  skipFormatting,
+  {
+    name: 'app/rules',
+    rules: {
+      // `catch (e: any)` is used idiomatically throughout — surface it, don't fail on it.
+      '@typescript-eslint/no-explicit-any': 'warn',
+      // Allow intentionally-unused names when prefixed with `_`.
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+    },
+  }
 )
