@@ -11,7 +11,7 @@ export const maintenanceState = reactive({ active: false, message: '' })
 
 const mockStoreConfig: ConciarStoreConfig = {
   general: {
-    store_name: 'Cellier',
+    store_name: 'Demo Store',
     store_type: 'general',
     store_size: 100,
     online_store: true,
@@ -61,7 +61,9 @@ const mockCountries: ConciarCountry[] = [
 ]
 
 async function request<T>(path: string, options: RequestInit = {}, authToken?: string): Promise<T> {
-  const token = authToken ?? sessionStorage.getItem('cellier_token')
+  // Falls back to the logged-in customer's OTP token when no explicit token is
+  // passed. Most authed calls pass their token explicitly (see customer.ts).
+  const token = authToken ?? localStorage.getItem('customer_token')
   const locale = localStorage.getItem('locale') ?? 'nl'
 
   const res = await fetch(`/api${path}`, {

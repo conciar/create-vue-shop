@@ -3,21 +3,18 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCartStore } from '@/stores/cart'
-import { useAuthStore } from '@/stores/auth'
 import { useCustomerStore } from '@/stores/customer'
 import { LOCALES } from '@/i18n'
+import { SHOP_NAME } from '@/config'
 
 const cart        = useCartStore()
-const auth        = useAuthStore()
 const customerAuth = useCustomerStore()
 
-const isLoggedIn = computed(() => auth.isAuthenticated || customerAuth.isLoggedIn)
+const isLoggedIn = computed(() => customerAuth.isLoggedIn)
 const displayName = computed(() =>
-  auth.isAuthenticated
-    ? `${auth.user?.firstName ?? ''} ${auth.user?.lastName ?? ''}`.trim()
-    : customerAuth.customer
-      ? `${customerAuth.customer.first_name} ${customerAuth.customer.last_name}`.trim()
-      : customerAuth.identifier
+  customerAuth.customer
+    ? `${customerAuth.customer.first_name} ${customerAuth.customer.last_name}`.trim()
+    : customerAuth.identifier
 )
 const { t, locale } = useI18n()
 
@@ -26,9 +23,9 @@ const userMenuOpen = ref(false)
 const langOpen = ref(false)
 
 const announcements = [
-  { icon: '★★★★★', text: '97% recommend Cellier' },
-  { icon: '🚚', text: 'For next-day delivery order by 5 p.m. on business days' },
-  { icon: '↩', text: 'Free returns in every store' },
+  { icon: '🚚', text: 'Fast, tracked delivery on every order' },
+  { icon: '↩', text: 'Free, easy returns' },
+  { icon: '🔒', text: 'Secure checkout' },
 ]
 const announcementIndex = ref(0)
 let announcementTimer: ReturnType<typeof setInterval>
@@ -62,8 +59,7 @@ function setLocale(code: string) {
     <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-end">
       <Transition name="announce" mode="out-in">
         <span :key="announcementIndex" class="flex items-center gap-2">
-          <span v-if="announcementIndex === 0" class="text-amber-400 tracking-tight">{{ announcements[announcementIndex].icon }}</span>
-          <span v-else>{{ announcements[announcementIndex].icon }}</span>
+          <span>{{ announcements[announcementIndex].icon }}</span>
           {{ announcements[announcementIndex].text }}
         </span>
       </Transition>
@@ -78,7 +74,7 @@ function setLocale(code: string) {
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
       <!-- Logo -->
       <RouterLink to="/" class="font-display text-lg font-semibold tracking-tight shrink-0" @click="closeAll">
-        Cellier
+        {{ SHOP_NAME }}
       </RouterLink>
 
       <!-- Desktop nav -->
@@ -140,7 +136,7 @@ function setLocale(code: string) {
 
         <!-- User menu (desktop) -->
         <div class="relative hidden md:block">
-          <!-- Authenticated (OAuth or OTP) -->
+          <!-- Authenticated -->
           <button
             v-if="isLoggedIn"
             @click="userMenuOpen = !userMenuOpen"
@@ -174,7 +170,7 @@ function setLocale(code: string) {
               <div class="px-4 py-2.5 border-b border-black/6">
                 <p class="text-sm font-medium truncate">{{ displayName }}</p>
                 <p class="text-xs text-gray-400 truncate mt-0.5">
-                  {{ auth.user?.email ?? customerAuth.customer?.email ?? customerAuth.identifier }}
+                  {{ customerAuth.customer?.email ?? customerAuth.identifier }}
                 </p>
               </div>
               <RouterLink to="/account/orders" @click="userMenuOpen = false" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -188,7 +184,7 @@ function setLocale(code: string) {
                   <path d="M9 3h6M9 3v3.5c0 .5-.2 1-.5 1.4L6 11v9a1 1 0 001 1h10a1 1 0 001-1v-9l-2.5-3.1c-.3-.4-.5-.9-.5-1.4V3M9 3h6" />
                   <path fill-rule="evenodd" d="M2 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3.5a.75.75 0 0 0 0-1.5H2.5v-9h11v2.25a.75.75 0 0 0 1.5 0V3a1 1 0 0 0-1-1H2Zm1.75 5a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5h-7.5Zm0 3a.75.75 0 0 0 0 1.5H6a.75.75 0 0 0 0-1.5H3.75Z" clip-rule="evenodd" />
                 </svg>
-                Mijn abonnementen
+                {{ t('nav.mySubscriptions') }}
               </RouterLink>
               <a
                 href="https://portal.conciar.com"
@@ -204,7 +200,7 @@ function setLocale(code: string) {
               </a>
               <div class="border-t border-black/6 mt-1 pt-1">
                 <button
-                  @click="auth.logout(); customerAuth.logout(); userMenuOpen = false"
+                  @click="customerAuth.logout(); userMenuOpen = false"
                   class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 text-gray-400">
@@ -243,14 +239,14 @@ function setLocale(code: string) {
         <div>
           <p class="text-sm font-medium">{{ displayName }}</p>
           <p class="text-xs text-gray-400">
-            {{ auth.user?.email ?? customerAuth.customer?.email ?? customerAuth.identifier }}
+            {{ customerAuth.customer?.email ?? customerAuth.identifier }}
           </p>
         </div>
       </div>
 
       <template v-if="isLoggedIn">
         <RouterLink to="/account/orders" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.myOrders') }}</RouterLink>
-        <RouterLink to="/account/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">Mijn abonnementen</RouterLink>
+        <RouterLink to="/account/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.mySubscriptions') }}</RouterLink>
       </template>
       <RouterLink to="/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.theBox') }}</RouterLink>
       <RouterLink to="/products" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.wines') }}</RouterLink>
@@ -277,7 +273,7 @@ function setLocale(code: string) {
       </div>
 
       <div class="border-t border-black/6 pt-3 mt-1">
-        <button v-if="isLoggedIn" @click="auth.logout(); customerAuth.logout(); closeAll()" class="w-full text-left py-2.5 text-sm font-medium text-gray-700 hover:text-black">
+        <button v-if="isLoggedIn" @click="customerAuth.logout(); closeAll()" class="w-full text-left py-2.5 text-sm font-medium text-gray-700 hover:text-black">
           {{ t('nav.signOut') }}
         </button>
         <RouterLink v-else to="/login" @click="closeAll" class="block py-2.5 text-sm font-medium text-primary">

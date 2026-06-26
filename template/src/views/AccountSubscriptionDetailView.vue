@@ -1206,9 +1206,9 @@ const commitmentProgress = computed(() => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5 shrink-0 text-blue-400 mt-0.5">
                   <path fill-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM9 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6.75 8a.75.75 0 0 0 0 1.5h.75v1.75a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8.25 8h-1.5Z" clip-rule="evenodd"/>
                 </svg>
-                <p class="font-mono text-xs text-blue-700 leading-relaxed"
-                  v-html="t('sub.modal.payment.mandateNotice', { amount: '<strong>€ 0,01</strong>' })">
-                </p>
+                <i18n-t keypath="sub.modal.payment.mandateNotice" tag="p" class="font-mono text-xs text-blue-700 leading-relaxed">
+                  <template #amount><strong>€ 0,01</strong></template>
+                </i18n-t>
               </div>
 
               <p v-if="updatePaymentError" class="font-mono text-xs text-red-500 mb-3">{{ updatePaymentError }}</p>
@@ -1250,9 +1250,10 @@ const commitmentProgress = computed(() => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 shrink-0 text-amber-500 mt-0.5">
                   <path fill-rule="evenodd" d="M6.701 2.25c.577-1 2.02-1 2.598 0l5.196 9a1.5 1.5 0 0 1-1.299 2.25H2.804a1.5 1.5 0 0 1-1.3-2.25l5.197-9ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 1 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
                 </svg>
-                <p class="font-mono text-xs text-amber-700 leading-relaxed"
-                  v-html="t('sub.modal.cancel.commitmentWarning', { n: commitmentProgress.remaining, cycles: `<strong>${commitmentProgress.remaining === 1 ? t('sub.modal.cancel.cycle') : t('sub.modal.cancel.cycles')}</strong>` })">
-                </p>
+                <i18n-t keypath="sub.modal.cancel.commitmentWarning" tag="p" class="font-mono text-xs text-amber-700 leading-relaxed">
+                  <template #n>{{ commitmentProgress.remaining }}</template>
+                  <template #cycles><strong>{{ commitmentProgress.remaining === 1 ? t('sub.modal.cancel.cycle') : t('sub.modal.cancel.cycles') }}</strong></template>
+                </i18n-t>
               </div>
               <label class="block font-mono text-xs text-gray-400 mb-1.5">{{ t('sub.modal.cancel.reasonLabel') }}</label>
               <input v-model="cancelReason" type="text" :placeholder="t('sub.modal.cancel.reasonPlaceholder')"

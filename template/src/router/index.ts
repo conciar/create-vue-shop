@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { useCustomerStore } from '@/stores/customer'
 import { useCartStore } from '@/stores/cart'
 import HomeView from '@/views/HomeView.vue'
@@ -75,11 +74,6 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
       meta: { fullscreen: true },
-    },
-    {
-      path: '/auth/callback',
-      name: 'auth-callback',
-      component: () => import('@/views/AuthCallbackView.vue')
     }
   ]
 })
@@ -93,9 +87,8 @@ router.beforeEach((to) => {
 
   if (!to.meta.requiresAuth) return true
 
-  const auth     = useAuthStore()
   const customer = useCustomerStore()
-  if (auth.isAuthenticated || customer.isLoggedIn) return true
+  if (customer.isLoggedIn) return true
 
   return { name: 'login', query: { returnTo: to.fullPath } }
 })

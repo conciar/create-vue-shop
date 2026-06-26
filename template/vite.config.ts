@@ -39,8 +39,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     server: {
-      port: 3001,
-      allowedHosts: ['cellier.local'],
+      port: 5173,
       // Proxy /api/* to Conciar, injecting the secret key server-side.
       // The key is never sent to the browser.
       proxy: env.CONCIAR_API_URL

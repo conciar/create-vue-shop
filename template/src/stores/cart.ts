@@ -12,7 +12,7 @@ const TOKEN_KEY = 'cart_token'
 export const useCartStore = defineStore('cart', () => {
   const cartToken = ref<string | null>(localStorage.getItem(TOKEN_KEY))
 
-  const stored = localStorage.getItem('cellier_cart')
+  const stored = localStorage.getItem('shop_cart')
   const items = ref<CartItem[]>(stored ? JSON.parse(stored) : [])
   const isOpen = ref(false)
   const appliedCoupons = ref<ConciarCartCoupon[]>([])
@@ -21,7 +21,7 @@ export const useCartStore = defineStore('cart', () => {
   const totals = ref<ConciarCartTotals | null>(null)
   const currency = ref<CartCurrency | null>(null)
 
-  watch(items, val => localStorage.setItem('cellier_cart', JSON.stringify(val)), { deep: true })
+  watch(items, val => localStorage.setItem('shop_cart', JSON.stringify(val)), { deep: true })
 
   const count = computed(() => items.value.reduce((s, i) => s + i.quantity, 0))
   // Local sum for instant feedback; the server confirms it via totals.subtotal.
@@ -187,7 +187,7 @@ export const useCartStore = defineStore('cart', () => {
     items.value = []
     appliedCoupons.value = []
     totals.value = null
-    localStorage.removeItem('cellier_cart')
+    localStorage.removeItem('shop_cart')
     syncToApi({ items: [] })
   }
 

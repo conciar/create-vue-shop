@@ -3,7 +3,6 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCartStore } from '@/stores/cart'
-import { useAuthStore } from '@/stores/auth'
 import { useCustomerStore } from '@/stores/customer'
 import { useCountriesStore, formatCountryName } from '@/stores/countries'
 import { useStoreConfigStore } from '@/stores/storeConfig'
@@ -16,17 +15,17 @@ import PriceWarningModal from '@/components/checkout/PriceWarningModal.vue'
 import CheckoutIssuesModal from '@/components/checkout/CheckoutIssuesModal.vue'
 import type { ConciarCartShippingMethod, ConciarCartPaymentMethod, ConciarPriceWarning, ConciarCheckoutIssue, ConciarCouponWarning, ConciarPickupLocation } from '@/api/conciar-types'
 import type { CheckoutForm, BillingAddress, SubscriptionBox } from '@/types'
+import { SHOP_NAME } from '@/config'
 
 const { t } = useI18n()
 const cart = useCartStore()
-const auth = useAuthStore()
 const customerAuth = useCustomerStore()
 const countriesStore = useCountriesStore()
 const storeConfig = useStoreConfigStore()
 const router = useRouter()
 
 // ── Form state — declared first so watches with immediate:true can reference it ──
-const savedCountryIso = localStorage.getItem('cellier_cart_country')
+const savedCountryIso = localStorage.getItem('shop_cart_country')
 const savedCountryName = savedCountryIso
   ? formatCountryName(
       countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === savedCountryIso)?.name ?? ''
@@ -54,7 +53,7 @@ const billingForm = ref<BillingAddress>({
 
 onMounted(async () => {
   // Gate: if guest checkout is disabled and no session, require login first
-  if (storeConfig.checkout?.guestCheckout === false && !customerAuth.isLoggedIn && !auth.isAuthenticated) {
+  if (storeConfig.checkout?.guestCheckout === false && !customerAuth.isLoggedIn) {
     router.replace({ path: '/login', query: { returnTo: '/checkout' } })
     return
   }
@@ -65,9 +64,9 @@ onMounted(async () => {
 // Prefill contact fields from sign-in when still empty
 watch(
   () => ({
-    firstName: auth.user?.firstName ?? customerAuth.customer?.first_name ?? '',
-    lastName:  auth.user?.lastName  ?? customerAuth.customer?.last_name  ?? '',
-    email:     auth.user?.email     ?? customerAuth.customer?.email      ?? '',
+    firstName: customerAuth.customer?.first_name ?? '',
+    lastName:  customerAuth.customer?.last_name  ?? '',
+    email:     customerAuth.customer?.email      ?? '',
   }),
   ({ firstName, lastName, email }) => {
     if (firstName && !form.value.firstName) form.value.firstName = firstName
@@ -141,18 +140,13 @@ const houseNumberFirst = computed(() => {
   return hnPos !== -1 && stPos !== -1 && hnPos < stPos
 })
 
-// Either OAuth session or OTP customer token counts as "signed in"
-const isSignedIn = computed(() => auth.isAuthenticated || customerAuth.isLoggedIn)
+const isSignedIn = computed(() => customerAuth.isLoggedIn)
 const displayName = computed(() =>
-  auth.isAuthenticated
-    ? `${auth.user?.firstName} ${auth.user?.lastName}`
-    : customerAuth.customer
-      ? `${customerAuth.customer.first_name} ${customerAuth.customer.last_name}`
-      : ''
+  customerAuth.customer
+    ? `${customerAuth.customer.first_name} ${customerAuth.customer.last_name}`
+    : ''
 )
-const displayEmail = computed(() =>
-  auth.isAuthenticated ? auth.user?.email : customerAuth.customer?.email ?? ''
-)
+const displayEmail = computed(() => customerAuth.customer?.email ?? '')
 const displayInitials = computed(() => {
   const name = displayName.value
   return name.split(' ').map(w => w[0]?.toUpperCase()).join('').slice(0, 2)
@@ -595,7 +589,7 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
     <!-- Minimal header -->
     <header class="bg-white border-b border-black/8">
       <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-        <RouterLink to="/" class="font-display text-lg font-semibold tracking-tight">Cellier</RouterLink>
+        <RouterLink to="/" class="font-display text-lg font-semibold tracking-tight">{{ SHOP_NAME }}</RouterLink>
         <h1 class="font-mono text-base font-semibold text-charcoal">{{ t('checkout.title') }}</h1>
         <RouterLink to="/cart" class="text-sm font-mono text-gray-500 hover:text-black transition-colors flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">

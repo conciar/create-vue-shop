@@ -33,13 +33,26 @@ A working storefront, no wine/demo domain baggage:
 
 | Variable | Purpose |
 | --- | --- |
-| `CONCIAR_API_URL` | API base URL — used by the dev proxy in `vite.config.ts` (server-only) |
+| `CONCIAR_API_URL` | API base URL — used by the dev proxy and the production server (server-only) |
 | `CONCIAR_API_KEY` | Connect API key (server-only, never bundled) |
 | `CONCIAR_SALES_CHANNEL_KEY` | Sales-channel key (server-only) |
+| `VITE_SHOP_NAME` | Shop display name (logo, footer, copyright, loading screen) |
 | `VITE_CONCIAR_API_URL` | Any non-empty value switches off mock mode and enables real API calls |
-| `VITE_APP_URL` | Public URL of the shop (OAuth redirect_uri) |
+| `VITE_APP_URL` | Public URL of the shop |
+| `PORT` | Port the production server listens on (optional, default `3000`) |
 
 Leave `VITE_CONCIAR_API_URL` empty to run in **mock mode** with built-in sample data — handy for a first look before wiring credentials.
+
+## Deploy to production
+
+The secret API key is **never** bundled into the browser. In development the Vite proxy injects it; in production a tiny zero-dependency Node server (`server.mjs`) does the same job:
+
+```bash
+npm run build      # outputs static assets to ./dist
+npm start          # serves ./dist + proxies /api with the secret injected server-side
+```
+
+`server.mjs` reads `CONCIAR_API_URL`, `CONCIAR_API_KEY`, and `CONCIAR_SALES_CHANNEL_KEY` from the environment (or `.env.local`), proxies `/api/*` to Conciar with the credentials attached, serves the SPA with history fallback, and converts the payment provider's POST return into a GET redirect. Run it behind your own TLS-terminating reverse proxy (or any Node host) and set the env vars there. Because the key stays on the server, never move it to a `VITE_`-prefixed variable.
 
 ## Rebrand
 

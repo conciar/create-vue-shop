@@ -22,7 +22,7 @@ const storeConfig = useStoreConfigStore()
 const countries   = useCountriesStore()
 const router      = useRouter()
 
-const COUNTRY_KEY = 'cellier_cart_country'
+const COUNTRY_KEY = 'shop_cart_country'
 const selectedCountry = ref<string>(localStorage.getItem(COUNTRY_KEY) ?? '')
 
 function onCountryChange(iso: string) {

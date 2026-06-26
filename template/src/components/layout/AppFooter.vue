@@ -2,7 +2,7 @@
   <footer class="bg-charcoal text-white mt-24" aria-label="Footer">
     <div class="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-12">
       <div>
-        <p class="font-display text-xl font-semibold mb-3">Cellier</p>
+        <p class="font-display text-xl font-semibold mb-3">{{ SHOP_NAME }}</p>
         <p class="text-sm text-gray-400 leading-relaxed max-w-xs">
           {{ t('footer.tagline') }}
         </p>
@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="border-t border-white/10 px-6 py-5 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-      <span>{{ t('footer.copyright', { year: new Date().getFullYear() }) }}</span>
+      <span>{{ t('footer.copyright', { year: new Date().getFullYear(), name: SHOP_NAME }) }}</span>
     </div>
   </footer>
 </template>
@@ -28,6 +28,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { SHOP_NAME } from '@/config'
 
 const { t } = useI18n()
 </script>

@@ -4,6 +4,7 @@ import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCustomerStore } from '@/stores/customer'
 import OtpLoginForm from '@/components/checkout/OtpLoginForm.vue'
+import { SHOP_NAME } from '@/config'
 
 const { t } = useI18n()
 const customer = useCustomerStore()
@@ -24,7 +25,7 @@ onMounted(() => {
 
     <header class="bg-white border-b border-black/8">
       <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-        <RouterLink to="/" class="font-display text-lg font-semibold tracking-tight">Cellier</RouterLink>
+        <RouterLink to="/" class="font-display text-lg font-semibold tracking-tight">{{ SHOP_NAME }}</RouterLink>
         <RouterLink to="/products" class="text-sm font-mono text-gray-400 hover:text-charcoal transition-colors">
           {{ t('login.continueShopping') }}
         </RouterLink>

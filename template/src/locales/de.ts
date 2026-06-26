@@ -5,6 +5,7 @@ export default {
     signIn: 'Anmelden',
     signOut: 'Abmelden',
     myOrders: 'Meine Bestellungen',
+    mySubscriptions: 'Meine Abonnements',
     manageAccount: 'Konto verwalten',
   },
   home: {
@@ -142,7 +143,7 @@ export default {
     account: 'Konto',
     merchantPortal: 'Händlerportal ↗',
     support: 'Support',
-    copyright: '© {year} Cellier. Powered by Conciar.',
+    copyright: '© {year} {name}. Powered by Conciar.',
   },
   cart: {
     title: 'Ihr Warenkorb',
