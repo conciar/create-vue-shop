@@ -275,18 +275,6 @@ const billingHouseNumberFirst = computed(() => {
   return fmt.indexOf('{house_number}') !== -1 && fmt.indexOf('{house_number}') < fmt.indexOf('{street}')
 })
 
-// Address is complete when all required fields are filled
-const isAddressComplete = computed(() =>
-  !!form.value.firstName &&
-  !!form.value.lastName &&
-  !!form.value.email &&
-  !!form.value.address &&
-  !!form.value.houseNumber &&
-  !!form.value.city &&
-  (!showPostcode.value || !!form.value.postcode) &&
-  (!requirePhone.value || !!form.value.phone)
-)
-
 // Minimum fields needed for an accurate shipping methods query
 const isShippingAddressReady = computed(() =>
   !!selectedCountry.value &&
@@ -335,6 +323,7 @@ async function fetchShippingMethods(preferMethodId?: number) {
 // are ready AND the cart token is available.
 // - Logged-in users: saved address pre-fills these; fires on navigation or after countries load on refresh.
 // - Guests: fires when they finish entering their city/postcode.
+// eslint-disable-next-line prefer-const -- separate declaration so the immediate callback sees `undefined` (not a TDZ error) before watch() returns the stopper
 let stopOnce: ReturnType<typeof watch>
 stopOnce = watch(
   () => !!(isShippingAddressReady.value && cart.cartToken),

@@ -84,7 +84,7 @@ async function request<T>(path: string, options: RequestInit = {}, authToken?: s
         maintenanceState.active = true
         maintenanceState.message = body.message ?? ''
       }
-    } catch {}
+    } catch { /* non-JSON 503 body — ignore */ }
     throw new Error('store_maintenance')
   }
   if (!res.ok) {

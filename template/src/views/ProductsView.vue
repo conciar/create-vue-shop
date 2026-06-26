@@ -183,7 +183,8 @@ const expandedFilters = ref<Set<string>>(new Set())
 function isExpanded(key: string) { return expandedFilters.value.has(key) }
 function toggleExpand(key: string) {
   const s = new Set(expandedFilters.value)
-  s.has(key) ? s.delete(key) : s.add(key)
+  if (s.has(key)) s.delete(key)
+  else s.add(key)
   expandedFilters.value = s
 }
 function visibleOptions(key: string, options: { value: string; count: number }[]) {
