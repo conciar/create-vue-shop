@@ -323,11 +323,19 @@ async function fetchShippingMethods(preferMethodId?: number) {
 // are ready AND the cart token is available.
 // - Logged-in users: saved address pre-fills these; fires on navigation or after countries load on refresh.
 // - Guests: fires when they finish entering their city/postcode.
-// eslint-disable-next-line prefer-const -- separate declaration so the immediate callback sees `undefined` (not a TDZ error) before watch() returns the stopper
-let stopOnce: ReturnType<typeof watch>
-stopOnce = watch(
+// Fire the initial shipping-methods fetch once the address + cart token are
+// ready (immediate covers a logged-in user's saved address). A one-shot flag
+// keeps it single-fire without referencing a stopper from inside its own
+// immediate callback (which would hit a const TDZ).
+let didInitialShippingFetch = false
+watch(
   () => !!(isShippingAddressReady.value && cart.cartToken),
-  (ready) => { if (ready) { fetchShippingMethods(); stopOnce?.() } },
+  (ready) => {
+    if (ready && !didInitialShippingFetch) {
+      didInitialShippingFetch = true
+      fetchShippingMethods()
+    }
+  },
   { immediate: true },
 )
 
