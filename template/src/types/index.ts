@@ -6,6 +6,7 @@ export interface Product {
   price: number
   originalPrice?: number
   image: string
+  variantId?: string        // Conciar product_variant_id — required for cart sync
   priceRules?: ConciarPriceRule[]
 }
 

@@ -1,12 +1,15 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
   "include": ["vite.config.*", "vitest.config.*"],
+  // Self-contained on purpose: we don't extend @tsconfig/node22 because its
+  // floating "lib" (es2024) isn't recognised by the pinned TypeScript and a
+  // child `lib` override can't suppress that parse-time error. These options
+  // cover everything needed to type-check the Vite/Vitest config files.
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    // Override the node22 base's "es2024" lib (not recognised by TS 5.5) with ESNext.
     "lib": ["ESNext"],
     "types": ["node"]
   }
