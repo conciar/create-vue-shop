@@ -18,9 +18,8 @@
 import { createServer, request as httpRequest } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import { existsSync, readFileSync, createReadStream, statSync } from 'node:fs'
-import { join, normalize, extname } from 'node:path'
+import { join, normalize, extname, dirname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const DIST = join(HERE, 'dist')
@@ -113,10 +112,19 @@ function proxyApi(req, res) {
 
 // ─── Static files + SPA fallback ─────────────────────────────────────────────
 function serveStatic(req, res) {
-  // Resolve safely inside DIST; default to index.html for "/".
-  const urlPath = decodeURIComponent((req.url || '/').split('?')[0])
+  // decodeURIComponent throws on malformed input (e.g. "/%") — treat as 400
+  // rather than letting it bubble up and crash the process.
+  let urlPath
+  try {
+    urlPath = decodeURIComponent((req.url || '/').split('?')[0])
+  } catch {
+    res.writeHead(400).end('Bad request')
+    return
+  }
   let filePath = normalize(join(DIST, urlPath))
-  if (!filePath.startsWith(DIST)) {
+  // Guard on a path boundary, not a string prefix, so a sibling like
+  // `<dist>-secret` can't be reached via a `..` escape.
+  if (filePath !== DIST && !filePath.startsWith(DIST + sep)) {
     res.writeHead(403).end('Forbidden')
     return
   }
@@ -133,13 +141,15 @@ function serveStatic(req, res) {
   }
   const type = MIME[extname(filePath)] || 'application/octet-stream'
   res.writeHead(200, { 'Content-Type': type })
+  if (req.method === 'HEAD') { res.end(); return }
   createReadStream(filePath).pipe(res)
 }
 
 const server = createServer((req, res) => {
   const url = req.url || '/'
 
-  if (url.startsWith('/api')) return proxyApi(req, res)
+  // Match the /api segment on a boundary so routes like /apidocs aren't proxied.
+  if (/^\/api(\/|\?|$)/.test(url)) return proxyApi(req, res)
 
   // PSP return: Buckaroo POSTs to the return URL. Convert to a GET redirect so
   // the SPA can load and the Vue route can read the status params.

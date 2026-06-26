@@ -57,8 +57,11 @@ export function useCoupon(fallbackError = 'Invalid or expired coupon code.') {
     const next = appliedCodes.value.filter(c => c.toUpperCase() !== target.toUpperCase())
     try {
       await cart.applyCoupons(next)
-    } catch {
-      // Removal is best-effort — don't block the user.
+    } catch (e) {
+      // The applied set is read back from the server, so a failed removal leaves
+      // the coupon visible — surface a message instead of failing silently.
+      console.warn('Coupon removal failed', e)
+      error.value = fallbackError
     }
   }
 

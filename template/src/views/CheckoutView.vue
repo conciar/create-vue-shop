@@ -25,12 +25,10 @@ const storeConfig = useStoreConfigStore()
 const router = useRouter()
 
 // ── Form state — declared first so watches with immediate:true can reference it ──
-const savedCountryIso = localStorage.getItem('shop_cart_country')
-const savedCountryName = savedCountryIso
-  ? formatCountryName(
-      countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === savedCountryIso)?.name ?? ''
-    ) || 'Netherlands'
-  : 'Netherlands'
+// Country is keyed by ISO code (canonical — matches what the cart persists in
+// `shop_cart_country` and what the order API expects). The display name is
+// derived from it for labels only, so a formatting tweak can't break the match.
+const savedCountryIso = (localStorage.getItem('shop_cart_country') ?? '').toUpperCase()
 
 const form = ref<CheckoutForm>({
   firstName: '',
@@ -42,13 +40,13 @@ const form = ref<CheckoutForm>({
   city: '',
   postcode: '',
   state: '',
-  country: savedCountryName,
+  country: savedCountryIso,
   notes: '',
 })
 
 const billingSameAsShipping = ref(true)
 const billingForm = ref<BillingAddress>({
-  address: '', houseNumber: '', city: '', postcode: '', state: '', country: 'Netherlands',
+  address: '', houseNumber: '', city: '', postcode: '', state: '', country: '',
 })
 
 onMounted(async () => {
@@ -58,7 +56,9 @@ onMounted(async () => {
     return
   }
 
-  countriesStore.fetch()
+  await countriesStore.fetch()
+  // Default to the first supported country when none carried over from the cart.
+  if (!form.value.country) form.value.country = filteredCountries.value[0]?.iso_code_2 ?? ''
 })
 
 // Prefill contact fields from sign-in when still empty
@@ -95,7 +95,7 @@ function applyAddress(addr: typeof savedAddresses.value[0]) {
   if (addr.house_number)  form.value.houseNumber = addr.house_number
   if (addr.city)          form.value.city        = addr.city
   form.value.postcode     = addr.zipcode ?? ''
-  if (addr.country?.name) form.value.country     = formatCountryName(addr.country.name)
+  if (addr.country?.iso2) form.value.country     = addr.country.iso2.toUpperCase()
 }
 
 // Phone pre-fill from saved profile
@@ -113,7 +113,7 @@ const filteredCountries = computed(() => {
 })
 
 const selectedCountry = computed(() =>
-  countriesStore.countries.find(c => formatCountryName(c.name) === form.value.country) ?? null
+  countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === form.value.country.toUpperCase()) ?? null
 )
 
 // Whether to show postcode field (default true until country loads)
@@ -244,6 +244,14 @@ const isFormReady = computed(() =>
   (!requirePhone.value || !!form.value.phone) &&
   (!requireShipping.value || !!selectedShippingMethod.value) &&
   pickupComplete.value &&
+  // When billing differs from shipping, the billing address must be complete too.
+  (billingSameAsShipping.value || (
+    !!selectedBillingCountry.value &&
+    !!billingForm.value.address &&
+    !!billingForm.value.houseNumber &&
+    !!billingForm.value.city &&
+    (!showBillingPostcode.value || !!billingForm.value.postcode)
+  )) &&
   !!selectedPaymentMethod.value &&
   cart.items.length > 0
 )
@@ -256,7 +264,7 @@ const shipping = computed(() => {
 const total = computed(() => Math.max(0, cart.subtotal - cart.discountAmount + shipping.value))
 
 const selectedBillingCountry = computed(() =>
-  countriesStore.countries.find(c => formatCountryName(c.name) === billingForm.value.country) ?? null
+  countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === billingForm.value.country.toUpperCase()) ?? null
 )
 const showBillingPostcode = computed(() =>
   selectedBillingCountry.value === null || selectedBillingCountry.value.has_zipcode !== false
@@ -715,7 +723,7 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
                   <option
                     v-for="country in filteredCountries"
                     :key="country.id"
-                    :value="formatCountryName(country.name)"
+                    :value="country.iso_code_2"
                   >{{ formatCountryName(country.name) }}</option>
                 </select>
               </div>
@@ -880,7 +888,8 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
                   :disabled="countriesStore.loading"
                   class="w-full border border-black/15 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-charcoal transition-colors bg-white disabled:opacity-60"
                 >
-                  <option v-for="country in filteredCountries" :key="country.id" :value="formatCountryName(country.name)">
+                  <option value="" disabled>{{ t('cart.selectCountry') }}</option>
+                  <option v-for="country in filteredCountries" :key="country.id" :value="country.iso_code_2">
                     {{ formatCountryName(country.name) }}
                   </option>
                 </select>
@@ -1162,7 +1171,7 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
                 <p class="text-sm text-gray-500 mt-0.5">
                   {{ form.address }} {{ form.houseNumber }}<template v-if="form.postcode">, {{ form.postcode }}</template> {{ form.city }}
                 </p>
-                <p class="text-sm text-gray-400">{{ form.country }}</p>
+                <p class="text-sm text-gray-400">{{ selectedCountry ? formatCountryName(selectedCountry.name) : form.country }}</p>
               </div>
 
               <!-- Billing address (if different) -->
@@ -1171,7 +1180,7 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
                 <p class="text-sm text-gray-500">
                   {{ billingForm.address }} {{ billingForm.houseNumber }}<template v-if="billingForm.postcode">, {{ billingForm.postcode }}</template> {{ billingForm.city }}
                 </p>
-                <p class="text-sm text-gray-400">{{ billingForm.country }}</p>
+                <p class="text-sm text-gray-400">{{ selectedBillingCountry ? formatCountryName(selectedBillingCountry.name) : billingForm.country }}</p>
               </div>
 
               <!-- Shipping + payment -->

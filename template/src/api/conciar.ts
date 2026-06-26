@@ -105,7 +105,7 @@ function mapBillingCycle(unit: string): 'monthly' | 'quarterly' {
   return 'monthly' // four_weekly, monthly, weekly all treated as monthly
 }
 
-function mapProduct(p: ConciarProduct): SubscriptionBox {
+export function mapProduct(p: ConciarProduct): SubscriptionBox {
   const name = (p.resolved_info ?? p.default_info).name
   const bottleMatch = name.match(/\d+/)
   const activeVariant = p.variants?.find(v => v.active)

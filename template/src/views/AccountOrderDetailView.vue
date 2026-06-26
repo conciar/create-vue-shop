@@ -34,6 +34,10 @@ const productLines = computed(() => order.value?.lines.filter(l => l.type.name =
 const shippingLine = computed(() => order.value?.lines.find(l => l.type.name === 'shipping') ?? null)
 const feeLines     = computed(() => order.value?.lines.filter(l => l.type.name === 'payment_fee') ?? [])
 
+// The customer-order price rows expose only a numeric `type_id` (no named type),
+// so we rely on the API's documented row order: subtotal first, grand total last.
+// (The order-create response in OrderConfirmationView carries `type.name` and is
+// matched by name there; this endpoint can't be.)
 const subtotalDisplay = computed(() => order.value?.prices[0]?.display_price ?? null)
 const totalDisplay    = computed(() => order.value?.prices.at(-1)?.display_price ?? null)
 
