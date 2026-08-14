@@ -49,6 +49,20 @@ describe('activePriceRules', () => {
     expect(activePriceRules(null, now)).toEqual([])
     expect(activePriceRules(undefined, now)).toEqual([])
   })
+
+  it('excludes a rule once the current time is after end_time', () => {
+    expect(activePriceRules([rule({ start_time: '08:00', end_time: '10:00' })], now)).toHaveLength(0)
+  })
+
+  it('does not block on a malformed time string (fails closed to "always on" for that bound)', () => {
+    expect(activePriceRules([rule({ start_time: 'invalid' })], now)).toHaveLength(1)
+  })
+
+  it('matches Sunday via the d===0 -> 7 token mapping', () => {
+    const sunday = new Date('2026-06-14T12:00:00') // a Sunday
+    expect(activePriceRules([rule({ weekdays: ['sunday'] })], sunday)).toHaveLength(1)
+    expect(activePriceRules([rule({ weekdays: [7] })], sunday)).toHaveLength(1)
+  })
 })
 
 describe('promoLabel', () => {
@@ -73,6 +87,16 @@ describe('promoLabel', () => {
 
   it('returns null for non-badging rule types (e.g. fixed)', () => {
     expect(promoLabel(rule({ type: { name: 'fixed' } }), t)).toBeNull()
+  })
+
+  it('defaults buy/get quantities to 1 and discount to 0 when absent', () => {
+    const r = rule({ type: { name: 'buy_x_get_y' } })
+    expect(promoLabel(r, t)).toBe('promo.buyGetOff:{"buy":1,"get":1,"pct":0}')
+  })
+
+  it('defaults the percentage to 0 when absent (and no merchant name)', () => {
+    const r = rule({ type: { name: 'percentage' }, percentage: undefined })
+    expect(promoLabel(r, t)).toBe('promo.percentOff:{"pct":0}')
   })
 })
 
