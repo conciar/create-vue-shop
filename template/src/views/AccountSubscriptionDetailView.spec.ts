@@ -273,6 +273,7 @@ describe('AccountSubscriptionDetailView — renewal delivery', () => {
     await wrapper.get('input[placeholder="City"]').setValue('Amsterdam')
     await wrapper.findAll('button').find(b => b.text().includes('Find delivery options'))!.trigger('click')
     await vi.waitFor(() => expect(wrapper.text()).toContain('Standard'))
+    expect(shippingMethods).toHaveBeenCalled()
 
     await wrapper.findAll('button').find(b => b.text().includes('Standard'))!.trigger('click')
     await wrapper.findAll('button').find(b => b.text() === 'Save delivery details')!.trigger('click')
