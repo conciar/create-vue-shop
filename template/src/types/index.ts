@@ -17,7 +17,6 @@ export interface SubscriptionBox {
   name: string
   tagline: string
   description: string
-  bottles: number
   price: number
   originalPrice?: number
   frequency: 'monthly' | 'quarterly'

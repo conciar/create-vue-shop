@@ -1,7 +1,7 @@
 export default {
   nav: {
-    theBox: 'Abonnementen',
-    wines: 'Shop',
+    subscriptions: 'Abonnementen',
+    shop: 'Shop',
     signIn: 'Aanmelden',
     signOut: 'Afmelden',
     myOrders: 'Mijn bestellingen',
@@ -137,7 +137,7 @@ export default {
   footer: {
     tagline: 'Een webwinkel mogelijk gemaakt door Conciar.',
     shop: 'Winkel',
-    wines: 'Shop',
+    products: 'Producten',
     subscriptions: 'Abonnementen',
     myOrders: 'Mijn bestellingen',
     account: 'Account',

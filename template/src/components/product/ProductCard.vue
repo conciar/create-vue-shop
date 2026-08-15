@@ -77,7 +77,6 @@ function asCartProduct(): Product | SubscriptionBox {
       isSubscription: true,
       tagline: '',
       description: props.product.resolved_info?.description ?? '',
-      bottles: 0,
       frequency: sd?.billing_cycle_unit === 'quarterly' ? 'quarterly' : 'monthly',
       highlights: [],
       minimumCommitmentCycles: sd?.minimum_commitment_cycles ?? null,

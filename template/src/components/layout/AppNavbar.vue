@@ -79,8 +79,8 @@ function setLocale(code: string) {
 
       <!-- Desktop nav -->
       <nav class="hidden md:flex items-center gap-7 text-base font-medium text-gray-600">
-        <RouterLink to="/subscriptions" class="hover:text-black transition-colors" active-class="text-black">{{ t('nav.theBox') }}</RouterLink>
-        <RouterLink to="/products" class="hover:text-black transition-colors" active-class="text-black">{{ t('nav.wines') }}</RouterLink>
+        <RouterLink to="/subscriptions" class="hover:text-black transition-colors" active-class="text-black">{{ t('nav.subscriptions') }}</RouterLink>
+        <RouterLink to="/products" class="hover:text-black transition-colors" active-class="text-black">{{ t('nav.shop') }}</RouterLink>
       </nav>
 
       <div class="flex items-center gap-2">
@@ -248,8 +248,8 @@ function setLocale(code: string) {
         <RouterLink to="/account/orders" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.myOrders') }}</RouterLink>
         <RouterLink to="/account/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.mySubscriptions') }}</RouterLink>
       </template>
-      <RouterLink to="/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.theBox') }}</RouterLink>
-      <RouterLink to="/products" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.wines') }}</RouterLink>
+      <RouterLink to="/subscriptions" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.subscriptions') }}</RouterLink>
+      <RouterLink to="/products" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black" @click="closeAll">{{ t('nav.shop') }}</RouterLink>
       <a href="https://portal.conciar.com" target="_blank" rel="noopener noreferrer" class="py-2.5 text-sm font-medium text-gray-700 hover:text-black">
         {{ t('nav.manageAccount') }} ↗
       </a>

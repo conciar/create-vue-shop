@@ -107,7 +107,6 @@ function mapBillingCycle(unit: string): 'monthly' | 'quarterly' {
 
 export function mapProduct(p: ConciarProduct): SubscriptionBox {
   const name = (p.resolved_info ?? p.default_info).name
-  const bottleMatch = name.match(/\d+/)
   const activeVariant = p.variants?.find(v => v.active)
   const price = activeVariant?.converted_retail_price?.amount
     ?? (activeVariant?.retail_price ? parseFloat(activeVariant.retail_price.amount) : null)
@@ -130,7 +129,6 @@ export function mapProduct(p: ConciarProduct): SubscriptionBox {
     name,
     tagline: '',
     description: (p.resolved_info ?? p.default_info).description ?? '',
-    bottles: bottleMatch ? parseInt(bottleMatch[0]) : 0,
     price,
     originalPrice,
     frequency: p.subscription_detail

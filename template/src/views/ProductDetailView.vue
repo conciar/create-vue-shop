@@ -22,6 +22,8 @@ onMounted(async () => {
     // Default to the first in-stock variant (or the first) so the CTA has a concrete selection.
     const active = (product.value?.variants ?? []).filter(v => v.active)
     if (active.length) selectedVariantId.value = (active.find(v => !v.out_of_stock) ?? active[0]).id
+  } catch {
+    // leave `product` null — the template's "not found" state covers this
   } finally {
     loading.value = false
   }

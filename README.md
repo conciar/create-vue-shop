@@ -19,7 +19,7 @@ npm run dev
 
 ## What you get
 
-A working storefront, no wine/demo domain baggage:
+A working storefront, domain-neutral out of the box:
 
 - **Catalogue & detail** — product listing with search, filters, pagination; product detail with a generic spec list, tax breakdown, and a compare tray/modal.
 - **Cart & checkout** — cart drawer + full cart, coupons (single/stackable), automatic promotion badges & discount lines, PostNL pickup-point & delivery-timeframe pickers, server-validated checkout (out-of-stock / price-drift / expired-coupon handling).

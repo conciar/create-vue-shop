@@ -6,6 +6,9 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { i18n } from './i18n'
+import { SHOP_NAME } from './config'
+
+document.title = SHOP_NAME
 
 const app = createApp(App)
 

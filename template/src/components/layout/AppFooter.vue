@@ -9,7 +9,7 @@
       </div>
       <div class="flex flex-col gap-3 text-sm text-gray-400">
         <h2 class="text-white font-medium mb-1">{{ t('footer.shop') }}</h2>
-        <RouterLink to="/products" class="hover:text-white transition-colors">{{ t('footer.wines') }}</RouterLink>
+        <RouterLink to="/products" class="hover:text-white transition-colors">{{ t('footer.products') }}</RouterLink>
         <RouterLink to="/subscriptions" class="hover:text-white transition-colors">{{ t('footer.subscriptions') }}</RouterLink>
         <RouterLink to="/account/orders" class="hover:text-white transition-colors">{{ t('footer.myOrders') }}</RouterLink>
       </div>

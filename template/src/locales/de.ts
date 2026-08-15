@@ -1,7 +1,7 @@
 export default {
   nav: {
-    theBox: 'Abonnements',
-    wines: 'Shop',
+    subscriptions: 'Abonnements',
+    shop: 'Shop',
     signIn: 'Anmelden',
     signOut: 'Abmelden',
     myOrders: 'Meine Bestellungen',
@@ -137,7 +137,7 @@ export default {
   footer: {
     tagline: 'Ein Online-Shop, betrieben von Conciar.',
     shop: 'Shop',
-    wines: 'Shop',
+    products: 'Produkte',
     subscriptions: 'Abonnements',
     myOrders: 'Meine Bestellungen',
     account: 'Konto',

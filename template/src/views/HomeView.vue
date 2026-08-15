@@ -14,6 +14,8 @@ const featuredLoading = ref(true)
 onMounted(async () => {
   try {
     featured.value = await conciarApi.products.list({ featured: true })
+  } catch {
+    // leave `featured` empty — the template's empty state covers this
   } finally {
     featuredLoading.value = false
   }

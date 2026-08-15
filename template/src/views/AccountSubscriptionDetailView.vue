@@ -706,6 +706,8 @@ const commitmentProgress = computed(() => {
               <p class="font-mono text-xs text-amber-700 mt-0.5 leading-relaxed">{{ t('sub.pausedState.desc') }}</p>
             </div>
           </div>
+          <!-- Inline action errors (resume) — modal-driven actions surface their own -->
+          <p v-if="actionError" class="font-mono text-xs text-red-500 mb-3">{{ actionError }}</p>
           <div class="flex items-center gap-3">
             <button type="button" :disabled="actionBusy" @click="doResume"
               class="flex-1 bg-charcoal text-white font-mono font-medium text-sm py-3 rounded-xl hover:bg-primary transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
@@ -795,6 +797,9 @@ const commitmentProgress = computed(() => {
               </button>
             </div>
           </template>
+
+          <!-- Inline action errors (skip / unskip) — modal-driven actions surface their own -->
+          <p v-if="actionError" class="font-mono text-xs text-red-500 -mt-2 mb-4">{{ actionError }}</p>
 
           <!-- Renewal delivery -->
           <div class="pt-4 border-t border-black/6">

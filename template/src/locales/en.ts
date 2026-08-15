@@ -1,7 +1,7 @@
 export default {
   nav: {
-    theBox: 'Subscriptions',
-    wines: 'Shop',
+    subscriptions: 'Subscriptions',
+    shop: 'Shop',
     signIn: 'Sign in',
     signOut: 'Sign out',
     myOrders: 'My orders',
@@ -137,7 +137,7 @@ export default {
   footer: {
     tagline: 'A storefront powered by Conciar.',
     shop: 'Shop',
-    wines: 'Shop',
+    products: 'Products',
     subscriptions: 'Subscriptions',
     myOrders: 'My Orders',
     account: 'Account',

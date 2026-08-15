@@ -6,6 +6,10 @@
   // cover everything needed to type-check the Vite/Vitest config files.
   "compilerOptions": {
     "composite": true,
+    // Without this, `vue-tsc --build` emits vite.config.js next to the
+    // source — and Vite prefers .js over .ts, so the compiled copy
+    // silently shadows the real config. Type-check only, never emit.
+    "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ESNext",
     "module": "ESNext",
