@@ -24,7 +24,7 @@ beforeEach(() => {
 
 const order = (): ConciarCreatedOrder => ({
   lines: [
-    { name: 'Wine A', type: { name: 'product' }, qty: 2, prices: [{ amount: '10.00' }] },
+    { name: 'Product A', type: { name: 'product' }, qty: 2, prices: [{ amount: '10.00' }] },
     { name: 'Spring sale', type: { name: 'promotion_discount' }, qty: 1, prices: [{ amount: '-2.00' }] },
     { name: 'Shipping', type: { name: 'shipping' }, qty: 1, prices: [{ amount: '0.00' }] },
   ] as never,
@@ -47,7 +47,7 @@ describe('OrderConfirmationView — with order state (fresh navigation)', () => 
   it('renders product lines, discounts and totals from router state', async () => {
     const wrapper = await mountAt('ORD-1', { order: order() })
     expect(wrapper.text()).toContain('ORD-1')
-    expect(wrapper.text()).toContain('Wine A')
+    expect(wrapper.text()).toContain('Product A')
     expect(wrapper.text()).toContain('€ 20,50') // total
     expect(wrapper.text()).toContain('€ 20,00') // subtotal
     expect(wrapper.text()).toContain('€ 3,50') // tax

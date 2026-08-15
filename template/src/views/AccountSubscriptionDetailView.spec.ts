@@ -34,7 +34,7 @@ const sub = (over: Partial<ConciarCustomerSubscription> = {}): ConciarCustomerSu
   shipping_address: null,
   shipping_method: null,
   product: {
-    default_info: { name: 'Wine Box' },
+    default_info: { name: 'Sample Box' },
     subscription_detail: { billing_cycle_unit: 'month', billing_cycle_interval: 1 },
     retail_price: { display_price: '€ 20,00' },
   },
@@ -73,7 +73,7 @@ describe('AccountSubscriptionDetailView — loading & errors', () => {
     expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThan(0)
 
     resolve(sub())
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine Box'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Sample Box'))
   })
 
   it('shows a not-found message on a non-401 failure', async () => {
@@ -94,7 +94,7 @@ describe('AccountSubscriptionDetailView — header', () => {
   it('shows product name, billing label, status and price', async () => {
     vi.spyOn(conciarApi.customerSubscriptions, 'get').mockResolvedValue(sub())
     const { wrapper } = await mountSub()
-    expect(wrapper.text()).toContain('Wine Box')
+    expect(wrapper.text()).toContain('Sample Box')
     expect(wrapper.text()).toContain('Every month')
     expect(wrapper.text()).toContain('Active')
     expect(wrapper.text()).toContain('€ 20,00')

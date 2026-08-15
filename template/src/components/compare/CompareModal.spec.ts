@@ -92,11 +92,11 @@ describe('CompareModal — fallbacks', () => {
     const compare = useCompareStore()
     compare.toggle(product(1))
     vi.spyOn(conciarApi.products, 'getDetail').mockResolvedValue(detail({
-      property_values: [{ property: { key: 'grape', default_info: null }, default_info: { value: 'Merlot' } }] as never,
+      property_values: [{ property: { key: 'material', default_info: null }, default_info: { value: 'Oak' } }] as never,
     }))
     const wrapper = mountWithPlugins(CompareModal)
-    await vi.waitFor(() => expect(wrapper.text()).toContain('grape'))
-    expect(wrapper.text()).toContain('Merlot')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('material'))
+    expect(wrapper.text()).toContain('Oak')
   })
 
   it('skips products whose detail fetch returned null when collecting property keys', async () => {

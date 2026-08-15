@@ -21,8 +21,8 @@ const product = (over: Partial<ConciarProduct> = {}): ConciarProduct => ({
   active: true,
   out_of_stock: false,
   is_subscription: false,
-  resolved_info: { name: 'Wine A', description: 'A lovely wine.' },
-  default_info: { name: 'Wine A', description: 'A lovely wine.' },
+  resolved_info: { name: 'Product A', description: 'A lovely product.' },
+  default_info: { name: 'Product A', description: 'A lovely product.' },
   converted_retail_price: { amount: 20, display_price: '€ 20,00', currency: {} },
   converted_compare_price: null,
   variants: [],
@@ -51,7 +51,7 @@ describe('ProductDetailView — loading & not found', () => {
     expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThan(0)
 
     resolve(product())
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
   })
 
   it('shows "Product not found" when the fetch fails', async () => {
@@ -65,8 +65,8 @@ describe('ProductDetailView — basic rendering', () => {
   it('renders name, description, price and image fallback', async () => {
     vi.spyOn(conciarApi.products, 'getDetail').mockResolvedValue(product())
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
-    expect(wrapper.text()).toContain('A lovely wine.')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
+    expect(wrapper.text()).toContain('A lovely product.')
     expect(wrapper.text()).toContain('€ 20,00')
     expect(wrapper.find('img').exists()).toBe(false)
   })
@@ -91,7 +91,7 @@ describe('ProductDetailView — basic rendering', () => {
   it('disables add-to-cart and shows an overlay badge when out of stock', async () => {
     vi.spyOn(conciarApi.products, 'getDetail').mockResolvedValue(product({ out_of_stock: true }))
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.findAll('button').filter(b => b.text() === 'Out of stock').length).toBeGreaterThan(0)
     expect(wrapper.findAll('button:disabled').length).toBeGreaterThan(0)
   })
@@ -207,7 +207,7 @@ describe('ProductDetailView — compare', () => {
   it('hides the compare toggle without comparable properties, shows it with them, and toggles', async () => {
     vi.spyOn(conciarApi.products, 'getDetail').mockResolvedValue(product())
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.text()).not.toContain('Add to compare')
   })
 
@@ -293,7 +293,7 @@ describe('ProductDetailView — additional branch coverage', () => {
       sku: null, converted_retail_price: null,
     }))
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.get('.hidden.lg\\:block').text()).toContain('–')
   })
 
@@ -320,7 +320,7 @@ describe('ProductDetailView — additional branch coverage', () => {
       ] as never,
     }))
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.text()).not.toContain('Tags')
   })
 
@@ -329,7 +329,7 @@ describe('ProductDetailView — additional branch coverage', () => {
       converted_retail_price: null,
     }))
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     const cart = useCartStore()
     await wrapper.findAll('button').find(b => b.text() === 'Add to cart')!.trigger('click')
     expect(cart.items[0].price).toBe(0)

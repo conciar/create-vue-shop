@@ -17,7 +17,7 @@ import { stdin as input, stdout as output, argv, exit, cwd } from 'node:process'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE_DIR = join(HERE, 'template')
 // Never copy these from the template into a generated project.
-const SKIP = new Set(['node_modules', 'dist', '.git', '.env', '.env.local', '.DS_Store'])
+const SKIP = new Set(['node_modules', 'dist', 'coverage', '.git', '.env', '.env.local', '.DS_Store'])
 
 const c = {
   reset: '\x1b[0m', bold: '\x1b[1m', dim: '\x1b[2m',

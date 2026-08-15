@@ -42,9 +42,9 @@ describe('CartView — empty state', () => {
 })
 
 describe('CartView — items', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
   const subscriptionItem: SubscriptionBox = {
-    id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '', bottles: 3,
+    id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '',
     price: 40, frequency: 'monthly', image: '', highlights: [],
   }
 
@@ -53,7 +53,7 @@ describe('CartView — items', () => {
     cart.add(productItem, 'product')
     cart.add(subscriptionItem, 'subscription', 'Monthly')
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
 
     expect(wrapper.text()).toContain('One-time purchase')
     expect(wrapper.text()).toContain('Monthly')
@@ -63,7 +63,7 @@ describe('CartView — items', () => {
     const cart = useCartStore()
     cart.add(productItem, 'product')
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
 
     const minusButtons = wrapper.findAll('button').filter(b => b.text() === '−')
     expect(minusButtons[0].attributes('disabled')).toBeDefined()
@@ -77,7 +77,7 @@ describe('CartView — items', () => {
     const cart = useCartStore()
     cart.add(productItem, 'product')
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
 
     await wrapper.get('[title="Remove"]').trigger('click')
     expect(cart.items).toHaveLength(0)
@@ -88,7 +88,7 @@ describe('CartView — items', () => {
     cart.add(productItem, 'product')
     cart.totals = { subtotal: 20, discount: 0, total: 20 } as never
     const wrapperNoDiscount = mountView()
-    await vi.waitFor(() => expect(wrapperNoDiscount.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapperNoDiscount.text()).toContain('Product A'))
     expect(wrapperNoDiscount.text()).not.toContain('Discount')
 
     cart.totals = { subtotal: 20, discount: 5, total: 15 } as never
@@ -98,14 +98,14 @@ describe('CartView — items', () => {
 })
 
 describe('CartView — shipping destination', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
 
   it('shows a loading skeleton, then the country select filtered by supported countries', async () => {
     let resolveCountries!: (v: ConciarCountry[]) => void
     vi.spyOn(conciarApi.countries, 'list').mockReturnValue(new Promise(r => (resolveCountries = r)))
     useCartStore().add(productItem, 'product')
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.find('select').exists()).toBe(false)
 
     resolveCountries([nl, de])
@@ -134,7 +134,7 @@ describe('CartView — shipping destination', () => {
 })
 
 describe('CartView — free shipping progress', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
 
   it('shows the unlocked banner once qualified', async () => {
     const cart = useCartStore()
@@ -157,13 +157,13 @@ describe('CartView — free shipping progress', () => {
     cart.add(productItem, 'product')
     cart.totals = { subtotal: 20, discount: 0, total: 20, free_shipping: null } as never
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.text()).not.toContain('free shipping')
   })
 })
 
 describe('CartView — coupons', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
 
   beforeEach(() => {
     vi.stubEnv('VITE_CONCIAR_API_URL', 'https://api.test')
@@ -231,10 +231,10 @@ describe('CartView — coupons', () => {
 
 describe('CartView — checkout CTA', () => {
   it('navigates to /checkout from the summary button', async () => {
-    useCartStore().add({ id: 'p1', name: 'Wine A', price: 20, image: '' }, 'product')
+    useCartStore().add({ id: 'p1', name: 'Product A', price: 20, image: '' }, 'product')
     const router = testRouter()
     const wrapper = mountWithPlugins(CartView, { global: { plugins: [router] } })
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
 
     await wrapper.findAll('button').find(b => b.text().includes('Proceed to checkout'))!.trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/checkout'))
@@ -242,12 +242,12 @@ describe('CartView — checkout CTA', () => {
 })
 
 describe('CartView — remaining branch coverage', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
 
   it('shows the generic subscription badge when the item carries no interval label', async () => {
     const cart = useCartStore()
     cart.add({
-      id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '', bottles: 1,
+      id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '',
       price: 40, frequency: 'monthly', image: '', highlights: [],
     } as SubscriptionBox, 'subscription') // no interval argument
     const wrapper = mountView()
@@ -260,7 +260,7 @@ describe('CartView — remaining branch coverage', () => {
     cart.add(productItem, 'product')
     cart.totals = { subtotal: 20, discount: 0, total: 20, free_shipping: { threshold: 0, remaining: 0, qualified: false } } as never
     const wrapper = mountView()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.text()).not.toContain('free shipping')
   })
 

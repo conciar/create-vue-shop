@@ -31,7 +31,7 @@ const baseOrder = (over: Partial<ConciarCustomerOrderDetail> = {}): ConciarCusto
   status: { name: 'paid' },
   customer_notes: null,
   lines: [
-    { id: 1, name: 'Wine A', qty: 2, type: { name: 'product' }, prices: [{ display_price: '€ 20,00' }] },
+    { id: 1, name: 'Product A', qty: 2, type: { name: 'product' }, prices: [{ display_price: '€ 20,00' }] },
     { id: 2, name: 'Shipping', qty: 1, type: { name: 'shipping' }, prices: [{ amount: '0.00', display_price: '€ 0,00' }] },
   ] as never,
   prices: [{ display_price: '€ 20,00' }, { display_price: '€ 20,00' }] as never,
@@ -54,7 +54,7 @@ describe('AccountOrderDetailView', () => {
     const { wrapper } = await mountAt()
     expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThan(0)
     await vi.waitFor(() => expect(wrapper.text()).toContain('ORD-1'))
-    expect(wrapper.text()).toContain('Wine A')
+    expect(wrapper.text()).toContain('Product A')
     expect(wrapper.text()).toContain('Gratis') // free shipping line
   })
 
@@ -119,7 +119,7 @@ describe('AccountOrderDetailView', () => {
         id: 1,
         reference: 'CN-1',
         created_at: '2026-01-20T00:00:00Z',
-        lines: [{ id: 1, name: 'Wine A', quantity: 1, prices: [{ type: { name: 'total_price' }, amount: '10.00', display_price: '€ 10,00' }] }],
+        lines: [{ id: 1, name: 'Product A', quantity: 1, prices: [{ type: { name: 'total_price' }, amount: '10.00', display_price: '€ 10,00' }] }],
       }] as never,
     })
     vi.spyOn(conciarApi.customerOrders, 'get').mockResolvedValue(order)
@@ -155,7 +155,7 @@ describe('AccountOrderDetailView', () => {
     ;(order.lines as never as { prices: unknown[] }[])[0].prices = []
     vi.spyOn(conciarApi.customerOrders, 'get').mockResolvedValue(order)
     const { wrapper } = await mountAt()
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
     expect(wrapper.text()).toContain('–')
   })
 

@@ -11,7 +11,7 @@ beforeEach(() => {
 })
 
 const box = (id: string): SubscriptionBox => ({
-  id, isSubscription: true, name: `Box ${id}`, tagline: '', description: '', bottles: 3,
+  id, isSubscription: true, name: `Box ${id}`, tagline: '', description: '',
   price: 10, frequency: 'monthly', image: '', highlights: [],
 })
 

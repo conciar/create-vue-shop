@@ -34,9 +34,9 @@ function testRouter() {
   })
 }
 
-const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
 const subscriptionItem: SubscriptionBox = {
-  id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '', bottles: 3,
+  id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '',
   price: 40, frequency: 'monthly', image: '', highlights: [], minimumCommitmentCycles: 3, renewCommitmentOnCycle: true,
 }
 
@@ -342,7 +342,7 @@ describe('CheckoutView — submit flow', () => {
     vi.spyOn(conciarApi.cart, 'paymentMethods').mockResolvedValue([paymentMethod()])
     vi.spyOn(conciarApi.cart, 'checkoutCheck').mockResolvedValue({
       can_proceed: false, has_changes: false, warnings: [],
-      issues: [{ sku: 'p1', name: 'Wine A', type: 'out_of_stock' }] as never,
+      issues: [{ sku: 'p1', name: 'Product A', type: 'out_of_stock' }] as never,
     })
     const { wrapper, router } = await mountCheckout()
     await fillShippingAddress(wrapper)
@@ -381,7 +381,7 @@ describe('CheckoutView — submit flow', () => {
     vi.spyOn(conciarApi.cart, 'paymentMethods').mockResolvedValue([paymentMethod()])
     vi.spyOn(conciarApi.cart, 'checkoutCheck').mockResolvedValue({
       can_proceed: true, has_changes: true,
-      warnings: [{ sku: 'p1', name: 'Wine A', original_price: 20, new_price: 22 }] as never,
+      warnings: [{ sku: 'p1', name: 'Product A', original_price: 20, new_price: 22 }] as never,
       issues: [],
     })
     const create = vi.spyOn(conciarApi.orders, 'create').mockResolvedValue({
@@ -607,7 +607,7 @@ describe('CheckoutView — additional branch coverage', () => {
     vi.spyOn(conciarApi.cart, 'paymentMethods').mockResolvedValue([paymentMethod()])
     vi.spyOn(conciarApi.cart, 'checkoutCheck').mockResolvedValue({
       can_proceed: false, has_changes: false, warnings: [],
-      issues: [{ sku: 'p1', name: 'Wine A', type: 'out_of_stock' }] as never,
+      issues: [{ sku: 'p1', name: 'Product A', type: 'out_of_stock' }] as never,
     })
     const { wrapper } = await mountCheckout()
     await fillShippingAddress(wrapper)
@@ -626,7 +626,7 @@ describe('CheckoutView — additional branch coverage', () => {
     vi.spyOn(conciarApi.cart, 'paymentMethods').mockResolvedValue([paymentMethod()])
     vi.spyOn(conciarApi.cart, 'checkoutCheck').mockResolvedValue({
       can_proceed: true, has_changes: true,
-      warnings: [{ sku: 'p1', name: 'Wine A', original_price: 20, new_price: 22 }] as never,
+      warnings: [{ sku: 'p1', name: 'Product A', original_price: 20, new_price: 22 }] as never,
       issues: [],
     })
     const create = vi.spyOn(conciarApi.orders, 'create')

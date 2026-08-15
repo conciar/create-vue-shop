@@ -78,9 +78,9 @@ describe('CartDrawer — empty state', () => {
 })
 
 describe('CartDrawer — items', () => {
-  const productItem: Product = { id: 'p1', name: 'Wine A', price: 20, image: '' }
+  const productItem: Product = { id: 'p1', name: 'Product A', price: 20, image: '' }
   const subscriptionItem: SubscriptionBox = {
-    id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '', bottles: 3,
+    id: 's1', isSubscription: true, name: 'Box', tagline: '', description: '',
     price: 40, frequency: 'monthly', image: '', highlights: [],
   }
 
@@ -92,7 +92,7 @@ describe('CartDrawer — items', () => {
     cart.isOpen = true
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Wine A')
+    expect(wrapper.text()).toContain('Product A')
     expect(wrapper.text()).toContain('Box')
     expect(wrapper.text()).toContain('Monthly')
   })

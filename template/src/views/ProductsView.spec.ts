@@ -60,8 +60,8 @@ describe('ProductsView — initial load', () => {
     const { wrapper } = await mountAt()
     expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThan(0)
 
-    resolveList(page({ data: [{ id: 1, resolved_info: { name: 'Wine A' }, files: [] }] as never, total: 1 }))
-    await vi.waitFor(() => expect(wrapper.text()).toContain('Wine A'))
+    resolveList(page({ data: [{ id: 1, resolved_info: { name: 'Product A' }, files: [] }] as never, total: 1 }))
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Product A'))
   })
 
   it('shows the empty state with a "clear filters" action', async () => {
@@ -90,9 +90,9 @@ describe('ProductsView — search', () => {
     vi.spyOn(conciarApi.connect.products, 'list').mockResolvedValue(page())
     const { wrapper, router } = await mountAt()
 
-    await wrapper.get('input[type="search"]').setValue('merlot')
+    await wrapper.get('input[type="search"]').setValue('lamp')
     await vi.advanceTimersByTimeAsync(400)
-    expect(router.currentRoute.value.query.q).toBe('merlot')
+    expect(router.currentRoute.value.query.q).toBe('lamp')
   })
 
   it('syncs the search box when the URL query changes externally (back/forward)', async () => {

@@ -11,7 +11,6 @@ const box = (over: Partial<SubscriptionBox> = {}): SubscriptionBox => ({
   name: 'Starter plan',
   tagline: 'Everything you need',
   description: 'A monthly plan.',
-  bottles: 3,
   price: 59,
   frequency: 'monthly',
   image: 'https://example.com/img.jpg',

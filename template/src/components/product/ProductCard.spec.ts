@@ -14,7 +14,7 @@ const product = (over: Partial<ConciarConnectProduct> = {}): ConciarConnectProdu
   is_subscription: false,
   is_one_time_purchase: true,
   subscription_detail: null,
-  resolved_info: { name: 'Sample Wine', description: '' },
+  resolved_info: { name: 'Sample product', description: '' },
   converted_retail_price: { amount: 25, display_price: '€ 25,00', currency: { symbol: 'EUR', symbol_icon: '€' } },
   converted_compare_price: null,
   files: [],
@@ -31,14 +31,14 @@ beforeEach(() => {
 describe('ProductCard — basic rendering', () => {
   it('renders the product name and price', () => {
     const wrapper = mountWithPlugins(ProductCard, { props: { product: product() } })
-    expect(wrapper.text()).toContain('Sample Wine')
+    expect(wrapper.text()).toContain('Sample product')
     expect(wrapper.text()).toContain('€ 25,00')
   })
 
   it('links to the product detail page with a slugified name', () => {
-    const wrapper = mountWithPlugins(ProductCard, { props: { product: product({ id: 7, resolved_info: { name: 'Nice Red Wine!', description: '' } }) } })
+    const wrapper = mountWithPlugins(ProductCard, { props: { product: product({ id: 7, resolved_info: { name: 'Nice Red Chair!', description: '' } }) } })
     const link = wrapper.findAll('a').find(a => a.attributes('href')?.startsWith('/product/7/'))
-    expect(link?.attributes('href')).toBe('/product/7/nice-red-wine')
+    expect(link?.attributes('href')).toBe('/product/7/nice-red-chair')
   })
 
   it('shows a placeholder icon when there is no image', () => {

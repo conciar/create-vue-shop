@@ -1,7 +1,7 @@
 export default {
   nav: {
-    theBox: 'Abonnements',
-    wines: 'Boutique',
+    subscriptions: 'Abonnements',
+    shop: 'Boutique',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
     myOrders: 'Mes commandes',
@@ -137,7 +137,7 @@ export default {
   footer: {
     tagline: 'Une boutique en ligne propulsée par Conciar.',
     shop: 'Boutique',
-    wines: 'Boutique',
+    products: 'Produits',
     subscriptions: 'Abonnements',
     myOrders: 'Mes commandes',
     account: 'Compte',
@@ -151,8 +151,8 @@ export default {
     continueShopping: 'Continuer mes achats',
     empty: {
       title: 'Votre panier est vide',
-      subtitle: 'Découvrez notre sélection de vins d\'exception.',
-      browse: 'Découvrir nos vins',
+      subtitle: 'Découvrez nos produits.',
+      browse: 'Voir les produits',
     },
     subscriptionBadge: 'Abonnement',
     oneTime: 'Achat unique',
@@ -183,7 +183,7 @@ export default {
       title: 'Panier',
       checkout: 'Commander →',
       viewFullCart: 'Voir le panier complet',
-      browse: 'Découvrir nos vins →',
+      browse: 'Voir les produits →',
       shippingNote: 'Les frais de livraison sont calculés au paiement.',
     },
   },
