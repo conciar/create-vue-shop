@@ -26,6 +26,7 @@ A working storefront, domain-neutral out of the box:
 - **Customer accounts** — OTP login, order history & detail, subscription management.
 - **i18n** — `en` / `nl` / `fr` / `de` via vue-i18n, all in parity.
 - **Conciar core** — the API client (`src/api/conciar.ts` + types), Pinia stores (cart, store config, countries, customer/auth), and composables, decoupled from any specific UI domain.
+- **Shared shop logic** — country-aware address formatting (`useAddressFormat`), billing-cycle wording (`utils/billing.ts`), product slugs and images (`utils/slug.ts`, `utils/images.ts`), and cart mapping (`utils/cartProduct.ts`), each in one place rather than per view.
 
 ## Configure
 

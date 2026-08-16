@@ -4,9 +4,10 @@ import { useRouter, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCustomerStore } from '@/stores/customer'
 import { conciarApi } from '@/api/conciar'
+import { billingLabel as cycleSentence } from '@/utils/billing'
 import type { ConciarCustomerSubscription } from '@/api/conciar-types'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const router   = useRouter()
 const customer = useCustomerStore()
 
@@ -26,26 +27,7 @@ onMounted(async () => {
 })
 
 function billingLabel(detail: { billing_cycle_unit: string; billing_cycle_interval: number }) {
-  if (detail.billing_cycle_unit === 'four_weekly')
-    return t('account.subscriptions.billing.everyFourWeeks', { n: detail.billing_cycle_interval * 4 })
-  const singular: Record<string, string> = {
-    week: t('account.subscriptions.billing.week'),
-    month: t('account.subscriptions.billing.month'),
-    year: t('account.subscriptions.billing.year'),
-    day: t('account.subscriptions.billing.day'),
-  }
-  const plural: Record<string, string> = {
-    week: t('account.subscriptions.billing.weeks'),
-    month: t('account.subscriptions.billing.months'),
-    year: t('account.subscriptions.billing.years'),
-    day: t('account.subscriptions.billing.days'),
-  }
-  if (detail.billing_cycle_interval === 1)
-    return t('account.subscriptions.billing.every', { unit: singular[detail.billing_cycle_unit] ?? detail.billing_cycle_unit })
-  return t('account.subscriptions.billing.everyN', {
-    n: detail.billing_cycle_interval,
-    units: plural[detail.billing_cycle_unit] ?? detail.billing_cycle_unit,
-  })
+  return cycleSentence(detail, t, te)
 }
 
 function formatDate(iso: string) {

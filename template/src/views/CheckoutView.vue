@@ -8,6 +8,7 @@ import { useCountriesStore, formatCountryName } from '@/stores/countries'
 import { useStoreConfigStore } from '@/stores/storeConfig'
 import { useCoupon } from '@/composables/useCoupon'
 import { useShippingPickers } from '@/composables/useShippingPickers'
+import { useAddressFormat } from '@/composables/useAddressFormat'
 import { conciarApi } from '@/api/conciar'
 import OtpLoginForm from '@/components/checkout/OtpLoginForm.vue'
 import PhoneInput from '@/components/checkout/PhoneInput.vue'
@@ -112,33 +113,10 @@ const filteredCountries = computed(() => {
   return countriesStore.countries.filter(c => allowed.includes(c.iso_code_2.toUpperCase()))
 })
 
-const selectedCountry = computed(() =>
-  countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === form.value.country.toUpperCase()) ?? null
-)
-
-// Whether to show postcode field (default true until country loads)
-const showPostcode = computed(() =>
-  selectedCountry.value === null || selectedCountry.value.has_zipcode !== false
-)
-
-// Whether to show state/province field
-const showState = computed(() => selectedCountry.value?.has_state === true)
-
-// Whether postcode should appear before city based on address_format
-const zipcodeBeforeCity = computed(() => {
-  const fmt = selectedCountry.value?.address_format ?? ''
-  const ziPos = fmt.indexOf('{zipcode}')
-  const cityPos = fmt.indexOf('{city}')
-  return ziPos !== -1 && cityPos !== -1 && ziPos < cityPos
-})
-
-// Whether house number appears before street in address_format
-const houseNumberFirst = computed(() => {
-  const fmt = selectedCountry.value?.address_format ?? ''
-  const hnPos = fmt.indexOf('{house_number}')
-  const stPos = fmt.indexOf('{street}')
-  return hnPos !== -1 && stPos !== -1 && hnPos < stPos
-})
+const { selectedCountry, showPostcode, showState, zipcodeBeforeCity, houseNumberFirst } =
+  useAddressFormat(() =>
+    countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === form.value.country.toUpperCase()) ?? null
+  )
 
 const isSignedIn = computed(() => customerAuth.isLoggedIn)
 const displayName = computed(() =>
@@ -263,17 +241,15 @@ const shipping = computed(() => {
 })
 const total = computed(() => Math.max(0, cart.subtotal - cart.discountAmount + shipping.value))
 
-const selectedBillingCountry = computed(() =>
+const {
+  selectedCountry: selectedBillingCountry,
+  showPostcode: showBillingPostcode,
+  showState: showBillingState,
+  zipcodeBeforeCity: billingZipcodeBeforeCity,
+  houseNumberFirst: billingHouseNumberFirst,
+} = useAddressFormat(() =>
   countriesStore.countries.find(c => c.iso_code_2.toUpperCase() === billingForm.value.country.toUpperCase()) ?? null
 )
-const showBillingPostcode = computed(() =>
-  selectedBillingCountry.value === null || selectedBillingCountry.value.has_zipcode !== false
-)
-const showBillingState = computed(() => selectedBillingCountry.value?.has_state === true)
-const billingHouseNumberFirst = computed(() => {
-  const fmt = selectedBillingCountry.value?.address_format ?? ''
-  return fmt.indexOf('{house_number}') !== -1 && fmt.indexOf('{house_number}') < fmt.indexOf('{street}')
-})
 
 // Minimum fields needed for an accurate shipping methods query
 const isShippingAddressReady = computed(() =>
@@ -892,15 +868,15 @@ async function handleRemoveIssue(issue: ConciarCheckoutIssue) {
                 </select>
               </div>
 
-              <!-- City + Postcode -->
-              <div :class="[!showBillingPostcode ? 'col-span-2' : '']">
+              <!-- City + Postcode — order driven by address_format -->
+              <div :class="[!showBillingPostcode ? 'col-span-2' : '', billingZipcodeBeforeCity && showBillingPostcode ? 'order-2' : '']">
                 <label class="text-xs font-mono font-medium text-gray-500 uppercase tracking-wider block mb-1.5">
                   {{ t('checkout.shipping.city') }}
                 </label>
                 <input v-model="billingForm.city" required type="text"
                   class="w-full border border-black/15 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-charcoal transition-colors bg-white" />
               </div>
-              <div v-if="showBillingPostcode">
+              <div v-if="showBillingPostcode" :class="billingZipcodeBeforeCity ? 'order-1' : ''">
                 <label class="text-xs font-mono font-medium text-gray-500 uppercase tracking-wider block mb-1.5">
                   {{ t('checkout.shipping.postcode') }}
                 </label>

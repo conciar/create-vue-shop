@@ -1,4 +1,24 @@
 export default {
+  // Billing-cycle wording, shared by the catalogue and the account pages.
+  // `cycle.*` is the badge form ("Mensuel"); `every`/`everyN` the sentence form
+  // ("Tous les 3 mois"). See utils/billing.ts.
+  billing: {
+    every: 'Chaque {unit}',
+    everyN: 'Tous les {n} {units}',
+    everyFourWeeks: 'Toutes les {n} semaines',
+    cycle: { daily: 'Quotidien', weekly: 'Hebdomadaire', monthly: 'Mensuel', quarterly: 'Trimestriel', yearly: 'Annuel' },
+    units: {
+      day: 'jour', week: 'semaine', month: 'mois', quarter: 'trimestre', year: 'an',
+      days: 'jours', weeks: 'semaines', months: 'mois', quarters: 'trimestres', years: 'ans',
+    },
+  },
+  notFound: {
+    eyebrow: 'Erreur 404',
+    title: 'Page introuvable',
+    subtitle: 'La page que vous cherchez n\'existe pas — elle a peut-être été déplacée ou supprimée.',
+    home: 'Retour à l\'accueil',
+    browse: 'Voir les produits',
+  },
   nav: {
     subscriptions: 'Abonnements',
     shop: 'Boutique',
@@ -307,13 +327,6 @@ export default {
       skipCount: '{n} à ignorer',
       nextDelivery: 'Prochaine livraison : {date}',
       statusLabel: { active: 'Actif', paused: 'En pause', cancelled: 'Annulé', inactive: 'Inactif' },
-      billing: {
-        everyFourWeeks: 'Toutes les {n} semaines',
-        every: 'Chaque {unit}',
-        everyN: 'Tous les {n} {units}',
-        week: 'semaine', month: 'mois', year: 'an', day: 'jour',
-        weeks: 'semaines', months: 'mois', years: 'ans', days: 'jours',
-      },
     },
   },
   sub: {
@@ -378,13 +391,6 @@ export default {
     },
     cycleStatus: { active: 'Actif', paid: 'Livré', skipped: 'Ignoré', pending: 'Planifié', failed: 'Échoué' },
     orderStatus: { completed: 'Terminé', paid: 'Payé', processing: 'En traitement', pending: 'En attente', failed: 'Échoué', cancelled: 'Annulé' },
-    billing: {
-      everyFourWeeks: 'Toutes les {n} semaines',
-      every: 'Chaque {unit}',
-      everyN: 'Tous les {n} {units}',
-      week: 'semaine', month: 'mois', year: 'an', day: 'jour',
-      weeks: 'semaines', months: 'mois', years: 'ans', days: 'jours',
-    },
     modal: {
       error: 'Une erreur est survenue.',
       swap: {

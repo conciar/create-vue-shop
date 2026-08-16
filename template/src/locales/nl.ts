@@ -1,4 +1,24 @@
 export default {
+  // Billing-cycle wording, shared by the catalogue and the account pages.
+  // `cycle.*` is the badge form ("Maandelijks"); `every`/`everyN` the sentence
+  // form ("Elke 3 maanden"). See utils/billing.ts.
+  billing: {
+    every: 'Elke {unit}',
+    everyN: 'Elke {n} {units}',
+    everyFourWeeks: 'Elke {n} weken',
+    cycle: { daily: 'Dagelijks', weekly: 'Wekelijks', monthly: 'Maandelijks', quarterly: 'Per kwartaal', yearly: 'Jaarlijks' },
+    units: {
+      day: 'dag', week: 'week', month: 'maand', quarter: 'kwartaal', year: 'jaar',
+      days: 'dagen', weeks: 'weken', months: 'maanden', quarters: 'kwartalen', years: 'jaar',
+    },
+  },
+  notFound: {
+    eyebrow: 'Fout 404',
+    title: 'Pagina niet gevonden',
+    subtitle: 'De pagina die u zocht bestaat niet — mogelijk is deze verplaatst of verwijderd.',
+    home: 'Terug naar home',
+    browse: 'Producten bekijken',
+  },
   nav: {
     subscriptions: 'Abonnementen',
     shop: 'Shop',
@@ -307,13 +327,6 @@ export default {
       skipCount: '{n} over te slaan',
       nextDelivery: 'Volgende levering: {date}',
       statusLabel: { active: 'Actief', paused: 'Gepauzeerd', cancelled: 'Geannuleerd', inactive: 'Inactief' },
-      billing: {
-        everyFourWeeks: 'Elke {n} weken',
-        every: 'Elke {unit}',
-        everyN: 'Elke {n} {units}',
-        week: 'week', month: 'maand', year: 'jaar', day: 'dag',
-        weeks: 'weken', months: 'maanden', years: 'jaar', days: 'dagen',
-      },
     },
   },
   sub: {
@@ -378,13 +391,6 @@ export default {
     },
     cycleStatus: { active: 'Actief', paid: 'Bezorgd', skipped: 'Overgeslagen', pending: 'Gepland', failed: 'Mislukt' },
     orderStatus: { completed: 'Voltooid', paid: 'Betaald', processing: 'In behandeling', pending: 'In afwachting', failed: 'Mislukt', cancelled: 'Geannuleerd' },
-    billing: {
-      everyFourWeeks: 'Elke {n} weken',
-      every: 'Elke {unit}',
-      everyN: 'Elke {n} {units}',
-      week: 'week', month: 'maand', year: 'jaar', day: 'dag',
-      weeks: 'weken', months: 'maanden', years: 'jaar', days: 'dagen',
-    },
     modal: {
       error: 'Er is een fout opgetreden.',
       swap: {

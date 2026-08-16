@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useCartStore } from '@/stores/cart'
 import { useCompareStore } from '@/stores/compare'
 import PromoBadge from '@/components/promo/PromoBadge.vue'
 import { conciarApi } from '@/api/conciar'
 import { formatMoney, discountDisplay } from '@/utils/money'
+import { productImage } from '@/utils/images'
+import { cycleLabel } from '@/utils/billing'
 import type { ConciarProduct, ConciarVariant } from '@/api/conciar-types'
 import type { Product } from '@/types'
 
 const route   = useRoute()
+const { t, te } = useI18n()
 const cart    = useCartStore()
 const compare = useCompareStore()
 
@@ -53,7 +57,7 @@ const discount = computed(() => {
 })
 // Tax decomposed out of the gross (displayed) price; null = no tax rule.
 const tax = computed(() => selectedVariant.value?.tax ?? product.value?.tax ?? null)
-const image       = computed(() => product.value?.files?.find(f => f.type?.name === 'image')?.url ?? null)
+const image       = computed(() => productImage(product.value))
 
 // Properties hidden from the generic spec list
 const HIDDEN_KEYS = new Set(['tags', 'label'])
@@ -69,19 +73,10 @@ const specs = computed(() =>
 )
 
 // ── Subscription helpers ──────────────────────────────────────────────────────
-const INTERVAL_LABELS: Record<string, string> = {
-  weekly:      'Weekly',
-  four_weekly: 'Every 4 weeks',
-  monthly:     'Monthly',
-  quarterly:   'Quarterly',
-  yearly:      'Yearly',
-}
-
 const intervalLabel = computed(() => {
   const sd = product.value?.subscription_detail
   if (!sd) return null
-  return INTERVAL_LABELS[sd.billing_cycle_unit]
-    ?? sd.billing_cycle_unit.replace(/_/g, ' ')
+  return cycleLabel(sd, t, te)
 })
 
 // Only offer comparison when the product actually has properties to compare

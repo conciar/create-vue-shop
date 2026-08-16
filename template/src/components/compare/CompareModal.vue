@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useCompareStore } from '@/stores/compare'
 import { conciarApi } from '@/api/conciar'
 import { useModalA11y } from '@/composables/useModalA11y'
+import { productImage } from '@/utils/images'
 import type { ConciarProduct } from '@/api/conciar-types'
 
 const { t } = useI18n()
@@ -59,7 +60,7 @@ function valueOf(detail: ConciarProduct | null, key: string) {
 }
 
 function imageSrc(idx: number) {
-  return compare.items[idx]?.files?.find(f => f.type?.name === 'image')?.url ?? null
+  return productImage(compare.items[idx])
 }
 
 function displayName(idx: number) {

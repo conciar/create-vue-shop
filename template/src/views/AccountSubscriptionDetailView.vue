@@ -6,7 +6,9 @@ import { useCustomerStore } from '@/stores/customer'
 import { useStoreConfigStore } from '@/stores/storeConfig'
 import { useCountriesStore, formatCountryName } from '@/stores/countries'
 import { conciarApi } from '@/api/conciar'
+import { billingLabel as cycleSentence } from '@/utils/billing'
 import { useModalA11y } from '@/composables/useModalA11y'
+import { useAddressFormat } from '@/composables/useAddressFormat'
 import type { ConciarCustomerSubscription, ConciarMandatePaymentMethod, ConciarSwapVariant, ConciarSwapProduct, ConciarCartShippingMethod, ConciarOrderAddress } from '@/api/conciar-types'
 
 const route       = useRoute()
@@ -14,7 +16,7 @@ const router      = useRouter()
 const customer    = useCustomerStore()
 const storeConfig = useStoreConfigStore()
 const countries   = useCountriesStore()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 
 const sub     = ref<ConciarCustomerSubscription | null>(null)
 const loading = ref(true)
@@ -240,6 +242,14 @@ const shipJustSucceeded  = ref(false)
 
 const selectedShipCountry = computed(() => countries.countries.find(c => c.id === shipForm.value.country_id) ?? null)
 
+// Same country rules the checkout address uses — which fields apply, in what order.
+const {
+  showPostcode: shipShowPostcode,
+  showState: shipShowState,
+  zipcodeBeforeCity: shipZipcodeBeforeCity,
+  houseNumberFirst: shipHouseNumberFirst,
+} = useAddressFormat(selectedShipCountry)
+
 async function openShippingModal() {
   modal.value             = 'shipping'
   shipError.value         = null
@@ -334,13 +344,7 @@ function productInfo(s: ConciarCustomerSubscription) {
 }
 
 function billingLabel(detail: { billing_cycle_unit: string; billing_cycle_interval: number }) {
-  if (detail.billing_cycle_unit === 'four_weekly')
-    return t('sub.billing.everyFourWeeks', { n: detail.billing_cycle_interval * 4 })
-  const unit  = t(`sub.billing.${detail.billing_cycle_unit}` as any, detail.billing_cycle_unit)
-  const units = t(`sub.billing.${detail.billing_cycle_unit}s` as any, unit)
-  return detail.billing_cycle_interval === 1
-    ? t('sub.billing.every', { unit })
-    : t('sub.billing.everyN', { n: detail.billing_cycle_interval, units })
+  return cycleSentence(detail, t, te)
 }
 
 function fmt(iso: string) {
@@ -1296,21 +1300,24 @@ const commitmentProgress = computed(() => {
                   <option :value="null" disabled>{{ t('sub.modal.shipping.country') }}</option>
                   <option v-for="c in countries.countries" :key="c.id" :value="c.id">{{ formatCountryName(c.name) }}</option>
                 </select>
+                <!-- Street + house number — order driven by address_format -->
                 <div class="grid grid-cols-[1fr_5rem] gap-2.5">
                   <input v-model="shipForm.street" type="text" :placeholder="t('sub.modal.shipping.street')"
-                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                    :class="['w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30', shipHouseNumberFirst ? 'order-2' : '']" />
                   <input v-model="shipForm.house_number" type="text" :placeholder="t('sub.modal.shipping.houseNumber')"
-                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                    :class="['w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30', shipHouseNumberFirst ? 'order-1' : '']" />
                 </div>
                 <input v-model="shipForm.apartment" type="text" :placeholder="t('sub.modal.shipping.apartment')"
                   class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
-                <div class="grid grid-cols-[7rem_1fr] gap-2.5">
-                  <input v-model="shipForm.zipcode" type="text" :placeholder="t('sub.modal.shipping.zipcode')"
-                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                <!-- Postcode + city — postcode hidden where the country has none.
+                     The narrow column follows the postcode rather than the position. -->
+                <div :class="!shipShowPostcode ? '' : shipZipcodeBeforeCity ? 'grid grid-cols-[7rem_1fr] gap-2.5' : 'grid grid-cols-[1fr_7rem] gap-2.5'">
+                  <input v-if="shipShowPostcode" v-model="shipForm.zipcode" type="text" :placeholder="t('sub.modal.shipping.zipcode')"
+                    :class="['w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30', shipZipcodeBeforeCity ? 'order-1' : 'order-2']" />
                   <input v-model="shipForm.city" type="text" :placeholder="t('sub.modal.shipping.city')"
-                    class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
+                    :class="['w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30', shipZipcodeBeforeCity ? 'order-2' : 'order-1']" />
                 </div>
-                <input v-model="shipForm.state" type="text" :placeholder="t('sub.modal.shipping.state')"
+                <input v-if="shipShowState" v-model="shipForm.state" type="text" :placeholder="t('sub.modal.shipping.state')"
                   class="w-full font-mono text-sm px-3 py-2.5 rounded-xl border border-black/10 bg-cream focus:outline-none focus:border-black/30" />
               </div>
 

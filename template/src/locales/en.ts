@@ -1,4 +1,24 @@
 export default {
+  // Billing-cycle wording, shared by the catalogue and the account pages.
+  // `cycle.*` is the badge form ("Monthly"); `every`/`everyN` the sentence form
+  // ("Every 3 months"). See utils/billing.ts.
+  billing: {
+    every: 'Every {unit}',
+    everyN: 'Every {n} {units}',
+    everyFourWeeks: 'Every {n} weeks',
+    cycle: { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' },
+    units: {
+      day: 'day', week: 'week', month: 'month', quarter: 'quarter', year: 'year',
+      days: 'days', weeks: 'weeks', months: 'months', quarters: 'quarters', years: 'years',
+    },
+  },
+  notFound: {
+    eyebrow: 'Error 404',
+    title: 'Page not found',
+    subtitle: 'The page you were looking for isn\'t here — it may have moved or never existed.',
+    home: 'Back to home',
+    browse: 'Browse products',
+  },
   nav: {
     subscriptions: 'Subscriptions',
     shop: 'Shop',
@@ -307,13 +327,6 @@ export default {
       skipCount: '{n} to skip',
       nextDelivery: 'Next delivery: {date}',
       statusLabel: { active: 'Active', paused: 'Paused', cancelled: 'Cancelled', inactive: 'Inactive' },
-      billing: {
-        everyFourWeeks: 'Every {n} weeks',
-        every: 'Every {unit}',
-        everyN: 'Every {n} {units}',
-        week: 'week', month: 'month', year: 'year', day: 'day',
-        weeks: 'weeks', months: 'months', years: 'years', days: 'days',
-      },
     },
   },
   sub: {
@@ -378,13 +391,6 @@ export default {
     },
     cycleStatus: { active: 'Active', paid: 'Delivered', skipped: 'Skipped', pending: 'Scheduled', failed: 'Failed' },
     orderStatus: { completed: 'Completed', paid: 'Paid', processing: 'Processing', pending: 'Pending', failed: 'Failed', cancelled: 'Cancelled' },
-    billing: {
-      everyFourWeeks: 'Every {n} weeks',
-      every: 'Every {unit}',
-      everyN: 'Every {n} {units}',
-      week: 'week', month: 'month', year: 'year', day: 'day',
-      weeks: 'weeks', months: 'months', years: 'years', days: 'days',
-    },
     modal: {
       error: 'Something went wrong.',
       swap: {

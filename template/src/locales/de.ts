@@ -1,4 +1,24 @@
 export default {
+  // Billing-cycle wording, shared by the catalogue and the account pages.
+  // `cycle.*` is the badge form ("Monatlich"); `every`/`everyN` the sentence
+  // form ("Alle 3 Monate"). See utils/billing.ts.
+  billing: {
+    every: 'Jede {unit}',
+    everyN: 'Alle {n} {units}',
+    everyFourWeeks: 'Alle {n} Wochen',
+    cycle: { daily: 'Täglich', weekly: 'Wöchentlich', monthly: 'Monatlich', quarterly: 'Vierteljährlich', yearly: 'Jährlich' },
+    units: {
+      day: 'Tag', week: 'Woche', month: 'Monat', quarter: 'Quartal', year: 'Jahr',
+      days: 'Tage', weeks: 'Wochen', months: 'Monate', quarters: 'Quartale', years: 'Jahre',
+    },
+  },
+  notFound: {
+    eyebrow: 'Fehler 404',
+    title: 'Seite nicht gefunden',
+    subtitle: 'Die gesuchte Seite existiert nicht — sie wurde möglicherweise verschoben oder entfernt.',
+    home: 'Zurück zur Startseite',
+    browse: 'Produkte entdecken',
+  },
   nav: {
     subscriptions: 'Abonnements',
     shop: 'Shop',
@@ -307,13 +327,6 @@ export default {
       skipCount: '{n} zu überspringen',
       nextDelivery: 'Nächste Lieferung: {date}',
       statusLabel: { active: 'Aktiv', paused: 'Pausiert', cancelled: 'Gekündigt', inactive: 'Inaktiv' },
-      billing: {
-        everyFourWeeks: 'Alle {n} Wochen',
-        every: 'Jede {unit}',
-        everyN: 'Alle {n} {units}',
-        week: 'Woche', month: 'Monat', year: 'Jahr', day: 'Tag',
-        weeks: 'Wochen', months: 'Monate', years: 'Jahre', days: 'Tage',
-      },
     },
   },
   sub: {
@@ -378,13 +391,6 @@ export default {
     },
     cycleStatus: { active: 'Aktiv', paid: 'Geliefert', skipped: 'Übersprungen', pending: 'Geplant', failed: 'Fehlgeschlagen' },
     orderStatus: { completed: 'Abgeschlossen', paid: 'Bezahlt', processing: 'In Bearbeitung', pending: 'Ausstehend', failed: 'Fehlgeschlagen', cancelled: 'Storniert' },
-    billing: {
-      everyFourWeeks: 'Alle {n} Wochen',
-      every: 'Jede {unit}',
-      everyN: 'Alle {n} {units}',
-      week: 'Woche', month: 'Monat', year: 'Jahr', day: 'Tag',
-      weeks: 'Wochen', months: 'Monate', years: 'Jahre', days: 'Tage',
-    },
     modal: {
       error: 'Ein Fehler ist aufgetreten.',
       swap: {

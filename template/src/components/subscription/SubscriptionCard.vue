@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
+import { productSlug } from '@/utils/slug'
 import type { SubscriptionBox } from '@/types'
 
 defineProps<{ box: SubscriptionBox }>()
@@ -33,7 +34,7 @@ const cart = useCartStore()
     <!-- Content -->
     <div class="p-6 flex flex-col flex-1 gap-4 bg-white">
       <div>
-        <RouterLink :to="`/product/${box.id}/${box.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`" class="hover:text-primary transition-colors">
+        <RouterLink :to="`/product/${box.id}/${productSlug(box.name, box.id)}`" class="hover:text-primary transition-colors">
           <h3 class="font-display text-2xl font-semibold">{{ box.name }}</h3>
         </RouterLink>
         <p class="text-primary text-sm font-medium mt-0.5">{{ box.tagline }}</p>

@@ -74,6 +74,12 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
       meta: { fullscreen: true },
+    },
+    // Catch-all, last: an unknown URL gets a real page rather than an empty shell.
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
     }
   ]
 })

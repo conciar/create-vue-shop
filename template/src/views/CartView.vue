@@ -6,6 +6,7 @@ import { useCartStore } from '@/stores/cart'
 import { useStoreConfigStore } from '@/stores/storeConfig'
 import { useCountriesStore, formatCountryName } from '@/stores/countries'
 import { useCoupon } from '@/composables/useCoupon'
+import { productSlug } from '@/utils/slug'
 import PromoBadge from '@/components/promo/PromoBadge.vue'
 
 const { t } = useI18n()
@@ -119,7 +120,7 @@ const selectedCountryName = computed(() =>
               class="bg-white rounded-2xl border border-black/8 p-5 flex gap-5"
             >
               <!-- Image -->
-              <RouterLink :to="`/product/${item.id}/${item.product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`"
+              <RouterLink :to="`/product/${item.id}/${productSlug(item.product.name, item.id)}`"
                 class="shrink-0 w-16 h-22 rounded-xl overflow-hidden bg-cream border border-black/6 flex items-center justify-center"
                 style="height: 88px"
               >

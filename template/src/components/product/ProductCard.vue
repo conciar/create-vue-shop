@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useCartStore } from '@/stores/cart'
 import { useCompareStore } from '@/stores/compare'
 import PromoBadge from '@/components/promo/PromoBadge.vue'
 import { formatMoney, discountDisplay } from '@/utils/money'
+import { productImage } from '@/utils/images'
+import { productSlug } from '@/utils/slug'
+import { cycleLabel } from '@/utils/billing'
+import { toCartProduct } from '@/utils/cartProduct'
 import type { ConciarConnectProduct } from '@/api/conciar-types'
-import type { Product, SubscriptionBox } from '@/types'
 
 const props = defineProps<{ product: ConciarConnectProduct }>()
+const { t, te } = useI18n()
 const cart    = useCartStore()
 const compare = useCompareStore()
 
@@ -27,7 +32,7 @@ function toggleCompare(e: Event) {
   compare.toggle(props.product)
 }
 
-const image = computed(() => props.product.files?.find(f => f.type?.name === 'image')?.url ?? null)
+const image = computed(() => productImage(props.product))
 const name  = computed(() => props.product.resolved_info?.name ?? `Product ${props.product.id}`)
 const price = computed(() => props.product.converted_retail_price?.display_price ?? null)
 
@@ -47,46 +52,13 @@ const taxNote = computed(() => {
   const labels = tax.components.map(c => c.name).join(' + ')
   return `Incl. ${formatMoney(tax.tax_total, tax.currency)}${labels ? ` ${labels}` : ''}`
 })
-const slug  = computed(() => name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+const slug  = computed(() => productSlug(name.value, props.product.sku ?? props.product.id))
 
 const intervalLabel = computed(() => {
   const sd = props.product.subscription_detail
   if (!sd) return null
-  const map: Record<string, string> = {
-    weekly:      'Weekly',
-    four_weekly: 'Every 4 weeks',
-    monthly:     'Monthly',
-    quarterly:   'Quarterly',
-    yearly:      'Yearly',
-  }
-  return map[sd.billing_cycle_unit] ?? sd.billing_cycle_unit.replace(/_/g, ' ')
+  return cycleLabel(sd, t, te)
 })
-
-function asCartProduct(): Product | SubscriptionBox {
-  const base = {
-    id: String(props.product.id),
-    name: name.value,
-    price: props.product.converted_retail_price?.amount ?? 0,
-    image: image.value ?? '',
-    priceRules: props.product.price_rules,
-  }
-  if (props.product.is_subscription) {
-    const sd = props.product.subscription_detail
-    return {
-      ...base,
-      isSubscription: true,
-      tagline: '',
-      description: props.product.resolved_info?.description ?? '',
-      frequency: sd?.billing_cycle_unit === 'quarterly' ? 'quarterly' : 'monthly',
-      highlights: [],
-      minimumCommitmentCycles: sd?.minimum_commitment_cycles ?? null,
-      renewCommitmentOnCycle: sd?.renew_commitment_on_cycle ?? null,
-    } satisfies SubscriptionBox
-  }
-  return {
-    ...base,
-  } satisfies Product
-}
 
 // When a product supports both purchase types, let the customer choose
 const canChoosePurchaseType = computed(() =>
@@ -100,7 +72,7 @@ function addToCart(e: Event) {
   e.preventDefault()
   const isSubscription = selectedPurchaseType.value === 'subscription'
   const type = isSubscription ? 'subscription' : 'product'
-  cart.add(asCartProduct(), type, isSubscription ? (intervalLabel.value ?? undefined) : undefined)
+  cart.add(toCartProduct(props.product), type, isSubscription ? (intervalLabel.value ?? undefined) : undefined)
 }
 </script>
 

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCompareStore } from '@/stores/compare'
+import { productImage } from '@/utils/images'
 import CompareModal from './CompareModal.vue'
 
 const { t } = useI18n()
@@ -9,7 +10,7 @@ const compare = useCompareStore()
 const showModal = ref(false)
 
 function imageSrc(idx: number) {
-  return compare.items[idx]?.files?.find(f => f.type?.name === 'image')?.url ?? null
+  return productImage(compare.items[idx])
 }
 function name(idx: number) {
   const item = compare.items[idx]
