@@ -844,3 +844,24 @@ export interface ConciarProductListParams {
   page?: number
   subscription?: boolean
 }
+
+/**
+ * A category as Connect returns it (`GET store/categories`).
+ *
+ * `slug` is derived server-side from the name in the sales channel's default language, so it stays
+ * put when the shopper switches locale — safe to use in URLs and to key per-category artwork off.
+ */
+export interface ConciarCategory {
+  id: number
+  parent_id: number | null
+  slug: string
+  name: string
+  description: string | null
+  /** Products visible in this channel, counted the same way the listing counts them. */
+  product_count: number
+}
+
+/** A top-level category, with its sub-categories nested underneath. */
+export interface ConciarCategoryTree extends ConciarCategory {
+  children: ConciarCategory[]
+}

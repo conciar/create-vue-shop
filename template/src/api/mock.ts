@@ -1,4 +1,5 @@
 import type { Product, SubscriptionBox, Order } from '@/types'
+import type { ConciarCategoryTree } from './conciar-types'
 
 export const mockProducts: Product[] = [
   { id: 'p1', name: 'Sample product 1', price: 29, image: '' },
@@ -125,4 +126,34 @@ export const mockOrders: Order[] = [
       country: 'Netherlands'
     }
   }
+]
+
+/**
+ * A stand-in for `GET store/categories`, used when no API URL is configured.
+ *
+ * Two levels deep with one childless parent, so a storefront rendering the tree meets both shapes
+ * before it ever talks to a real store.
+ */
+export const mockCategories: ConciarCategoryTree[] = [
+  {
+    id: 1,
+    parent_id: null,
+    slug: 'sample-category',
+    name: 'Sample category',
+    description: 'A demo category with a couple of children.',
+    product_count: 3,
+    children: [
+      { id: 2, parent_id: 1, slug: 'sample-child', name: 'Sample child', description: null, product_count: 2 },
+      { id: 3, parent_id: 1, slug: 'another-child', name: 'Another child', description: null, product_count: 1 },
+    ],
+  },
+  {
+    id: 4,
+    parent_id: null,
+    slug: 'empty-category',
+    name: 'Empty category',
+    description: null,
+    product_count: 0,
+    children: [],
+  },
 ]

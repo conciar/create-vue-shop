@@ -139,6 +139,21 @@ describe('conciarApi — mock mode (VITE_CONCIAR_API_URL unset)', () => {
     await expect(conciarApi.products.getDetail('9999')).rejects.toThrow('Not found')
   })
 
+  it('categories.list returns the mock tree, parents with children nested', async () => {
+    const categories = await conciarApi.categories.list()
+
+    expect(categories.length).toBeGreaterThan(0)
+    expect(categories.every(c => c.parent_id === null)).toBe(true)
+
+    // A childless parent has to be a valid shape too, or the tree UI breaks on a real store.
+    expect(categories.some(c => c.children.length > 0)).toBe(true)
+    expect(categories.some(c => c.children.length === 0)).toBe(true)
+
+    const child = categories.find(c => c.children.length)!.children[0]
+    expect(child.parent_id).toBe(categories.find(c => c.children.length)!.id)
+    expect(child.slug).toBeTruthy()
+  })
+
   it('paymentMethods.list returns an empty list', async () => {
     expect(await conciarApi.paymentMethods.list()).toEqual([])
   })

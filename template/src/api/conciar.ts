@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 import type { SubscriptionBox, Order } from '@/types'
-import type { ConciarProduct, ConciarPaginated, ConciarResponse, ConciarPaymentMethod, ConciarShippingMethod, ConciarCartShippingMethod, ConciarCartPaymentMethod, ConciarPickupLocation, ConciarDeliveryOption, ConciarDiscount, ConciarCartSyncRequest, ConciarCartData, ConciarCartInitData, ConciarCartGetResponse, OtpIdentifierType, OtpVerifyResponse, ConciarCountry, ConciarStoreConfig, ConciarConnectProduct, ConciarConnectProductsData, ConciarFilter, ConciarProductListParams, ConciarOrderCreateParams, ConciarOrderAddress, ConciarOrderCreateResponse, ConciarCheckoutCheckResponse, ConciarOrderStatus, ConciarPaymentStatus, ConciarCustomerOrdersData, ConciarCustomerOrderDetail, ConciarCustomerSubscription, ConciarMandatePaymentMethod, ConciarSwapOptions } from './conciar-types'
-import { mockSubscriptions, mockOrders, mockProducts } from './mock'
+import type { ConciarProduct, ConciarPaginated, ConciarResponse, ConciarPaymentMethod, ConciarShippingMethod, ConciarCartShippingMethod, ConciarCartPaymentMethod, ConciarPickupLocation, ConciarDeliveryOption, ConciarDiscount, ConciarCartSyncRequest, ConciarCartData, ConciarCartInitData, ConciarCartGetResponse, OtpIdentifierType, OtpVerifyResponse, ConciarCountry, ConciarStoreConfig, ConciarConnectProduct, ConciarConnectProductsData, ConciarFilter, ConciarProductListParams, ConciarOrderCreateParams, ConciarOrderAddress, ConciarOrderCreateResponse, ConciarCheckoutCheckResponse, ConciarOrderStatus, ConciarPaymentStatus, ConciarCustomerOrdersData, ConciarCustomerOrderDetail, ConciarCustomerSubscription, ConciarMandatePaymentMethod, ConciarSwapOptions, ConciarCategoryTree } from './conciar-types'
+import { mockSubscriptions, mockOrders, mockProducts, mockCategories } from './mock'
 
 const useMock = !import.meta.env.VITE_CONCIAR_API_URL
 
@@ -224,6 +224,20 @@ export const conciarApi = {
       if (useMock) return mockCountries
       const res = await request<{ countries: ConciarCountry[] }>('/countries')
       return res.countries
+    },
+  },
+
+  categories: {
+    /**
+     * The store's category tree, parents with their children nested.
+     *
+     * Sits at `/store/categories` rather than under products: a category is part of the store's
+     * taxonomy, not a property of any one product.
+     */
+    async list(): Promise<ConciarCategoryTree[]> {
+      if (useMock) return mockCategories
+      const res = await request<{ data: ConciarCategoryTree[] }>('/store/categories')
+      return res.data
     },
   },
 

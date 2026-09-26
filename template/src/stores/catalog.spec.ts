@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useCatalogStore } from './catalog'
 import { conciarApi } from '@/api/conciar'
 import type { SubscriptionBox } from '@/types'
-import type { ConciarConnectProductsData, ConciarFilter } from '@/api/conciar-types'
+import type { ConciarConnectProductsData, ConciarFilter, ConciarCategoryTree } from '@/api/conciar-types'
 
 const box = (id: string) => ({ id } as SubscriptionBox)
 
@@ -74,5 +74,48 @@ describe('catalog store — connect products', () => {
     await catalog.fetchConnectProducts()
     expect(catalog.connectError).toBe('Failed to load products')
     expect(catalog.connectLoading).toBe(false)
+  })
+})
+
+describe('catalog store — categories', () => {
+  const tree = (id: number) => ({
+    id, parent_id: null, slug: `c${id}`, name: `C${id}`,
+    description: null, product_count: 0, children: [],
+  } as ConciarCategoryTree)
+
+  it('fetchCategories populates categories on success', async () => {
+    vi.spyOn(conciarApi.categories, 'list').mockResolvedValue([tree(1)])
+    const catalog = useCatalogStore()
+
+    await catalog.fetchCategories()
+
+    expect(catalog.categories).toEqual([tree(1)])
+    expect(catalog.categoriesLoading).toBe(false)
+    expect(catalog.categoriesError).toBeNull()
+  })
+
+  it('does not refetch once loaded, but force overrides', async () => {
+    const list = vi.spyOn(conciarApi.categories, 'list').mockResolvedValue([tree(1)])
+    const catalog = useCatalogStore()
+
+    await catalog.fetchCategories()
+    await catalog.fetchCategories()
+    // Every page wants categories for navigation; refetching would spend a request on an
+    // answer already in hand.
+    expect(list).toHaveBeenCalledTimes(1)
+
+    await catalog.fetchCategories(true)
+    expect(list).toHaveBeenCalledTimes(2)
+  })
+
+  it('reports an error and leaves categories untouched on failure', async () => {
+    vi.spyOn(conciarApi.categories, 'list').mockRejectedValue(new Error('boom'))
+    const catalog = useCatalogStore()
+
+    await catalog.fetchCategories()
+
+    expect(catalog.categories).toEqual([])
+    expect(catalog.categoriesError).toBe('Failed to load categories')
+    expect(catalog.categoriesLoading).toBe(false)
   })
 })
